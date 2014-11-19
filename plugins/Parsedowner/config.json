@@ -1,0 +1,10 @@
+{    "PLUGIN_INFO": {
+        "name": "Parsedowner",
+        "description": "You choose which Markdown parser to use, add your own, or don't parse at all and deliver plain text - your choice. Choose from Parsedown, ParsedownExtra, PHP Markdown , PHP Markdown Extra or BootDown",        
+        "slug": "Parsedowner"
+    },
+    "EMBED_TAGS": {
+    },
+    "CONTENT_TAGS": {
+    }
+}

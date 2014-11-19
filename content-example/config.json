@@ -1,0 +1,22 @@
+{
+    "CONFIG": {
+        "CONTENT": "content-downdraft",
+        "SKIN": "/bootstrap/2.3.2/amelia",
+        "TEMPLATE": "fluid-bootdown",
+        "MARKDOWN_EXTENSION": ".md",
+        "INDEX_FILES": [
+            "index.php",
+            "index.html",
+            "index.html",
+            "index.md"
+        ]
+    },
+    "EMBED_TAGS": {
+        "SIDE_BAR": "sidebar.md",
+        "NAV_BAR": "navbar.md"
+    },
+    "CONTENT_TAGS": {
+        "SITE_NAME": "DownCast.com"
+        , "TAG_LINE": "Markdown on the Web"
+    }
+}

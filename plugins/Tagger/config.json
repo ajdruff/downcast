@@ -1,0 +1,10 @@
+{    "PLUGIN_INFO": {
+        "name": "Tagger",
+        "description": "Removes Sidebars, Navbars, or replace or modify the content of any Content or Embed Tag in a Template.",        
+        "slug": "Tagger"
+    },
+    "EMBED_TAGS": {
+    },
+    "CONTENT_TAGS": {
+    }
+}

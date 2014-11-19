@@ -1,0 +1,14 @@
+    {
+    "INFO": {
+        "NAME": "Starter"
+    },
+    "EMBED_TAGS": {
+        "SIDE_BAR": "sidebar.md"
+        ,"NAV_BAR": "navbar.md"     
+    },
+    "CONTENT_TAGS": {
+    }
+}
+
+        
+        

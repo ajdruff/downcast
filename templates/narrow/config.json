@@ -1,0 +1,12 @@
+    {
+    "INFO": {
+        "NAME": "Narrow"
+    },
+    "EMBED_TAGS": {
+        "SUBHEADING1": "example-content/narrow/subheading-sample1.md"
+        ,"SUBHEADING2": "example-content/narrow/subheading-sample1.md"
+        ,"NAV_BAR":  "example-content/narrow/navbar.md"   
+    },
+    "CONTENT_TAGS": {
+    }
+}

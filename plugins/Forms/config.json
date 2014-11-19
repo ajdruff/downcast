@@ -1,0 +1,10 @@
+{    "PLUGIN_INFO": {
+        "name": "Forms",
+        "description": "Provides the PHP Form Class framework to easily create forms.",        
+        "slug": "forms"
+    },
+    "EMBED_TAGS": {
+    },
+    "CONTENT_TAGS": {
+    }
+}

@@ -1,0 +1,3 @@
+{NAV_BAR}
+{SIDE_BAR}
+{CONTENT}

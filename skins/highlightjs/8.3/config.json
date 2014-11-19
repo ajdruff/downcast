@@ -1,0 +1,22 @@
+{
+    "INFO": {
+        "name": "HighlightJs"
+    },
+    "CSS":
+            [
+                "styles/github.css"
+            ]
+    ,
+    "INACTIVE":
+            [
+                "styles/ir_black.css",
+                "styles/brown_paper.css"
+            ]
+    ,
+    "JS":
+            [
+                "highlight.pack.js",
+                "highlight-activate.js"
+            ]
+
+}

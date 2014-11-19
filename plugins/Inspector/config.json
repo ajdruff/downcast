@@ -1,0 +1,10 @@
+{    "INFO": {
+        "name": "Plugin Inspector",
+        "description": "Lists the properties of each plugin",        
+        "slug": "hello-world"
+    },
+    "EMBED_TAGS": {
+    },
+    "CONTENT_TAGS": {
+    }
+}

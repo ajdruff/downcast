@@ -1,0 +1,16 @@
+{
+    "INFO": {
+        "name": "Readable"
+    },
+    "CSS":
+            [
+                "css/bootstrap.min.css",
+                "css/bootstrap-responsive.min.css"
+            ]
+    ,
+    "JS":
+            [
+                "js/bootstrap.min.js"
+            ]
+
+}

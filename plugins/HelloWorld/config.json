@@ -1,0 +1,10 @@
+{    "PLUGIN_INFO": {
+        "name": "Hello World",
+        "description": "A starter plugin that you can use to create your own plugins.",        
+        "slug": "HelloWorld"
+    },
+    "EMBED_TAGS": {
+    },
+    "CONTENT_TAGS": {
+    }
+}

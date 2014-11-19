@@ -1,0 +1,20 @@
+    {
+    "INFO": {
+        "NAME": "Fluid"
+    },
+    "EMBED_TAGS": {
+        "SIDE_BAR": "example-content/fluid/sidebar.md"
+        ,"NAV_BAR": "example-content/fluid/navbar.md"     
+        ,"FEATURE1": "example-content/fluid/feature1.md"
+        ,"FEATURE2": "example-content/fluid/feature2.md"
+        ,"FEATURE3": "example-content/fluid/feature3.md"
+        ,"FEATURE4": "example-content/fluid/feature4.md"
+        ,"FEATURE5": "example-content/fluid/feature5.md"
+        ,"FEATURE6": "example-content/fluid/feature6.md"    
+    },
+    "CONTENT_TAGS": {
+    }
+}
+
+        
+        
