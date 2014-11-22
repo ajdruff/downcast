@@ -8,7 +8,7 @@
     <meta name="author" content="">
 
     <!-- Le styles -->
-       {SKIN_CSS}
+       {CSS}
     <style>
       body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
@@ -43,7 +43,7 @@
 
     <!-- Le javascript
     ================================================== -->
-                {SKIN_JS}
+                {JS}
 
   </body>
 </html>

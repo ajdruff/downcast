@@ -1,31 +1,42 @@
-{
-    "CONFIG": {
-        "SKIN": [
-            "/bootstrap/2.3.2/superhero",
-            "/highlightjs/8.3"
+{"SITE":
+            {
+                "INFO":
+                        {
+                            "NAME": "DownCast",
+                            "DOMAIN": "downcast.com",
+                            "TAG_LINE": "",
+                            "DESCRIPTION": "My Awesome site",
+                            "COMMENT": "Alternate Configuration File",
+                            "VERSION": "1.0"
 
-        ],
+                        },
+                "CONFIG":
+                        {
+                  
+                            "SKIN": [
+                                "/bootstrap/2.3.2/superhero",
+                                "/highlightjs/8.3"
 
-        "PLUGINS": [
-            "hello-world",
-            "inspector"
-        ],
-        "TEMPLATE": "fluid",
-        "MARKDOWN_EXTENSION": ".md",
-        "INDEX_FILES": [
-            "index.php",
-            "index.html",
-            "index.html",
-            "index.md"
-        ]
-    },
-    "EMBED_TAGS": {
-        "SIDE_BAR": "sidebar.md",
-        "NAV_BAR": "navbar.md"
-    },
-    "CONTENT_TAGS": {
-        "SITE_NAME": "DownCast.com"
-        , "TAG_LINE": "Markdown on the Web"
-        , "HELLO_WORLD": "<?php echo 'hello world' ?>"
-    }
-}
+                            ],
+                            "PLUGINS_INACTIVE": [
+                                "HelloWorld",
+                                "Texter"
+                            ],
+                            "TEMPLATE": "fluid",
+                            "MARKDOWN_EXTENSION": ".md",
+                            "INDEX_FILES": [
+                                "index.php",
+                                "index.html",
+                                "index.html",
+                                "index.md"
+                            ]
+                        },
+                "EMBED_TAGS": {
+                    "SIDE_BAR": "sidebar.md",
+                    "NAV_BAR": "navbar.md"
+                },
+                "CONTENT_TAGS": {
+                    "HELLO_WORLD": "Hello World!"
+                }
+            }
+}  

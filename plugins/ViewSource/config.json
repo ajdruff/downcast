@@ -1,0 +1,10 @@
+{    "PLUGIN_INFO": {
+        "name": "ViewSource",
+        "description": "Adds a 'View Source' tab at top of each page. Clicking the tab, shows the source of the page.",        
+        "slug": "ViewSource"
+    },
+    "EMBED_TAGS": {
+    },
+    "CONTENT_TAGS": {
+    }
+}

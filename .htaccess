@@ -18,4 +18,12 @@ RewriteRule ^(.*)$ index.php/$1  [L]
 # Prevent file browsing
  Options -Indexes
 
+# Prevent Web Access to json config files
+
+<Files  ~ "config\.json$">
+  Order allow,deny
+  Deny from all
+</Files>
+
+
 

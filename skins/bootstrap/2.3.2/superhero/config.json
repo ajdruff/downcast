@@ -1,17 +1,27 @@
-{
-    "INFO": {
-        "name": "Superhero"
-    },
-    "CSS":
-            [
-                "css/bootstrap.min.css",
-                "css/bootstrap-responsive.min.css"
-            ]
-    ,
-    "JS":
-            [
-                "js/bootstrap.min.js"
-            ]
+{"SKIN":
+            {
+                "INFO":
+                        {
+                            "NAME": "Superhero",
+                            "DESCRIPTION": "Bootstrap Superhero swatch",
+                            "COMMENT": "http://bootswatch.com/",
+                            "VERSION": "2.3.2"
 
+                        },
+                "CONFIG":
+                        {
+                            "CSS":
+                                    [
+                                        "css/bootstrap.min.css",
+                                        "css/bootstrap-responsive.min.css"
+                                    ]
+                            ,
+                            "JS":
+                                    [
+                                        "js/bootstrap.min.js"
+                                    ]
+
+                        }
+            }
 }
 

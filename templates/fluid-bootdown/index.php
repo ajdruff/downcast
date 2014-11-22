@@ -10,7 +10,7 @@
         <meta name="author" content="">
 
         <!-- styles -->
-        {SKIN_CSS}
+        {CSS}
         
          <!-- script -->
 
@@ -96,7 +96,7 @@
 ================================================== -->
         <!-- Placed at the end of the document so the pages load faster -->
 
-                {SKIN_JS}
+                {JS}
 
 </body>
 </html>

@@ -8,7 +8,7 @@
     <meta name="author" content="">
 
     <!-- Le styles -->
-     {SKIN_CSS}
+     {CSS}
     <style type="text/css">
       body {
         padding-top: 20px;
@@ -96,6 +96,6 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-               {SKIN_JS}
+               {JS}
   </body>
 </html>

@@ -1,8 +1,5 @@
 <?php
 
-
-
-
 /**
  * Downcast Plugin Base 
  * 
@@ -16,9 +13,9 @@
  * @filesource
  */
 class DowncastPlugin   {
-    
-    private $_downcast=null;//reference to object that created plugin
-    
+
+    private $_downcast = null; //reference to object that created plugin
+
     /**
      * Downcast Object
      *
@@ -29,11 +26,12 @@ class DowncastPlugin   {
      * @return void
      */
 
-    public function downcast( ) {
-        
-            return $this->_downcast;
+    public function downcast() {
+
+        return $this->_downcast;
 
     }
+
     /**
      * Constructor
      *
@@ -44,13 +42,56 @@ class DowncastPlugin   {
      */
     public function __construct( $downcast ){
 
-        $this->_downcast=$downcast;
+        $this->_downcast = $downcast; //make the $downcast object available to the plugin
+        $downcast->readConfigFile( "plugins/" . get_class( $this ) . "/" . "config.json" ); //read config file
         $this->_common_config();
         $this->config();
-                $this->_common_init();
-        $this->init();
+        $this->_addTags();
 
     }
+
+    /**
+     * Add Tags
+     *
+     * Adds Plugin Embed and Content Tags
+     *
+     * @param none
+     * @return void
+     */
+    private function _addTags() {
+        $plugin_id = get_class( $this );
+        $embed_tags = $this->downcast()->CONFIG[ 'PLUGIN' ][ $plugin_id ][ 'EMBED_TAGS' ];
+        $content_tags = $this->downcast()->CONFIG[ 'PLUGIN' ][ $plugin_id ][ 'CONTENT_TAGS' ];
+        /*
+         * Add EMBED_TAGS
+         */
+        foreach ( $embed_tags as $tag ) {
+            $this->downcast()->addEmbedTag( $tag );
+}
+        /*
+         * Add CONTENT_TAGS
+         */
+        foreach ( $content_tags as $tag ) {
+          $this->downcast()->addContentTag( $tag );
+}
+       
+}
+
+    /**
+     * Plugin Initialization ( Must be public so Base can reach it) 
+     *
+     * Pubilic Initalization
+     *
+     * @param none
+     * @return void
+     */
+    public function _plugin_init() {
+
+        $this->_common_init(); //common internal initialization
+        $this->init(); //user's initialization
+
+    }
+
     /**
      * Common Configuration (Internal)
      *
@@ -59,13 +100,14 @@ class DowncastPlugin   {
      * @param none
      * @return void
      */
-    private function _common_config(  ) {
-                /*
-                 * Add any configuration that should occur for all plugins here
-                 */
+    private function _common_config() {
+        /*
+         * Add any configuration that should occur for all plugins here
+         */
 
     }
-        /**
+
+    /**
      * Common Initialization (Internal)
      *
      * Common Initialization
@@ -73,18 +115,18 @@ class DowncastPlugin   {
      * @param none
      * @return void
      */
-    private function _common_init(  ) {
-                /*
-                 * Add any Initialization that should occur for all plugins here
-                 */
+    private function _common_init() {
+        /*
+         * Add any Initialization that should occur for all plugins here
+         */
 
-    }
-    
+}
 
 
-    
 
-    
+
+
+
 }
 
 ?>

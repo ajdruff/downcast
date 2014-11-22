@@ -1,10 +1,23 @@
-{    "PLUGIN_INFO": {
-        "name": "Texter",
-        "description": "Shows Raw Markdown Text without parsing and rendering. Makes exceptions for Navbar or Sidebar or other Content and Embed Tags if desired.",        
-        "slug": "Texter"
-    },
-    "EMBED_TAGS": {
-    },
-    "CONTENT_TAGS": {
-    }
-}
+{"PLUGIN":
+            {
+                "INFO":
+                        {
+                            "NAME": "Texter",
+                            "DESCRIPTION": "Shows Raw Markdown Text without parsing and rendering. Makes exceptions for Navbar or Sidebar or other Content and Embed Tags if desired.",           
+                            "COMMENT" : "",
+                            "VERSION" : "1.0"
+
+                        },
+                "CONFIG":
+                        {
+                            "CSS": [
+                            ],
+                            "JS": [
+                            ]
+                        },
+                "EMBED_TAGS": {
+                },
+                "CONTENT_TAGS": {
+                }
+            }
+}  

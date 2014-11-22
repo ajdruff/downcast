@@ -12,4 +12,26 @@
                
             ]
 
-}
+},
+
+
+{"SKIN":
+            {
+                "INFO":
+                        {
+                            "NAME": "No style",
+                            "DESCRIPTION": "My Awesome site",
+                            "COMMENT" : "Local Development Site",
+                            "VERSION" : "1.0"
+
+                        },
+                "CONFIG":
+                        {
+                            "CSS": [
+
+                            ],
+                            "JS": [
+                            ],
+                        },
+            }
+}  

@@ -1,22 +1,42 @@
-{
-    "CONFIG": {
-        "CONTENT_ROOT": "content",
-        "SKIN": "/bootstrap/2.3.2/superhero",
-        "TEMPLATE": "fluid-bootdown",
-        "MARKDOWN_EXTENSION": ".md",
-        "INDEX_FILES": [
-            "index.php",
-            "index.html",
-            "index.html",
-            "index.md"
-        ]
-    },
-    "EMBED_TAGS": {
-        "SIDE_BAR": "sidebar.md",
-        "NAV_BAR": "navbar.md"
-    },
-    "CONTENT_TAGS": {
-        "SITE_NAME": "Bootdown.com"
-        , "TAG_LINE": "Markdown with Style"
-    }
-}
+{"SITE":
+            {
+                "INFO":
+                        {
+                            "NAME": "DownCast",
+                            "DOMAIN": "downcast.com",
+                            "TAG_LINE": "",
+                            "DESCRIPTION": "My Awesome site",
+                            "COMMENT": "Primary Configuration File",
+                            "VERSION": "1.0"
+
+                        },
+                "CONFIG":
+                        {
+                            "CONTENT_ROOT": "content",
+                            "SKIN": [
+                                "/bootstrap/2.3.2/superhero",
+                                "/highlightjs/8.3"
+
+                            ],
+                            "PLUGINS": [
+                                "hello-world",
+                                "inspector"
+                            ],
+                            "TEMPLATE": "fluid",
+                            "MARKDOWN_EXTENSION": ".md",
+                            "INDEX_FILES": [
+                                "index.php",
+                                "index.html",
+                                "index.html",
+                                "index.md"
+                            ]
+                        },
+                "EMBED_TAGS": {
+                    "SIDE_BAR": "sidebar.md",
+                    "NAV_BAR": "navbar.md"
+                },
+                "CONTENT_TAGS": {
+                    "HELLO_WORLD": "Hello World!"
+                }
+            }
+}  

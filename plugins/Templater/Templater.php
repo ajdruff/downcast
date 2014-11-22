@@ -31,7 +31,7 @@ class Templater extends DowncastPlugin {
         /*
          * Make the default Template the same as configured one
          */
-        $this->TEMPLATE_DEFAULT=$this->downcast()->TEMPLATE;
+        $this->TEMPLATE_DEFAULT=$this->downcast()->CONFIG['SITE']['CONFIG']['TEMPLATE'];
        
 
 /*
