@@ -12,10 +12,15 @@
                         {
                             "CSS":
                                     [
-                                        "styles/github.css"
+
                                     ]
                             ,
-                            "INACTIVE":
+                            "CSS_INLINE":
+                                    [
+                                        "styles/github.css"
+                                    ]
+                            ,                            
+                            "CSS_INACTIVE":
                                     [
                                         "styles/ir_black.css",
                                         "styles/brown_paper.css"
@@ -23,9 +28,13 @@
                             ,
                             "JS":
                                     [
-                                        "highlight.pack.js",
+                                        "highlight.pack.js"
+                                        
+                                    ],
+                            "JS_INLINE":
+                                    [
                                         "highlight-activate.js"
-                                    ]
+                                    ]                                    
 
                         }
             }

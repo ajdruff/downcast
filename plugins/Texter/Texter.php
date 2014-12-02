@@ -1,12 +1,18 @@
 <?php
-
-/*
+/**
  * Texter DownCast Plugin
- * 
- * 
+ *
  * This plugin will not parse the main content of the page, but will parse those tags in the 'Exception' section in config();
+ * It does this by overriding the main parser method of the Downcast class to only return the text unparsed. At the same time, it adds a tagfilter  for each tag that does need to be parsed, and parses the content of those tags when they are filtered.
+ * 
+ * @package Downcast
+ * @author Andrew Druffner <andrew@nomstock.com>
+ * @copyright  2012 Andrew Druffner
+ * @license    http://www.php.net/license/3_01.txt  PHP License 3.01
  * 
  */
+
+
 
 class Texter extends DowncastPlugin {
 
@@ -42,9 +48,15 @@ class Texter extends DowncastPlugin {
          * 
          */
 
-        $this->downcast()->addTagFilter( 'SIDE_BAR', array( $this, 'parseMarkdown' ) );
+        $this->downcast()->addTagFilter( 'SIDE_BAR', array( $this, 'tagfilterParseMarkdown' ) );
 
-        $this->downcast()->addTagFilter( 'NAV_BAR', array( $this, 'parseMarkdown' ) );
+ 
+
+
+
+
+
+        $this->downcast()->addTagFilter( 'NAV_BAR', array( $this, 'tagfilterParseMarkdown' ) );
 
 
 
@@ -64,20 +76,20 @@ class Texter extends DowncastPlugin {
     }
 
     /**
-     * Parse Markdown
+     * Tag Filter - Parse Markdown
      *
-     * Parses Markdown
+     * Parses Markdown for excluded tags
      *
      * @param none
      * @return void
      */
-    public function parseMarkdown( $text ) {
+    public function tagfilterParseMarkdown( $tagname,$content ) {
 
 
 
         include_once ("lib/bootdown/bootdown.php"); //add the bootdown library here  so we don't run into problems with a globally declared Markdown function with plugins.
 
-        return Markdown( $text );
+        return Markdown( $content );
 
     }
 

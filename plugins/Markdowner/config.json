@@ -1,0 +1,24 @@
+{"PLUGIN":
+            {
+                "INFO":
+                        {
+                            "NAME": "Markdowner",
+                            "DESCRIPTION": "You choose which Markdown parser to use, add your own, or don't parse at all and deliver plain text - your choice. Choose from Parsedown, ParsedownExtra, PHP Markdown , PHP Markdown Extra or BootDown",          
+                            "COMMENT" : "",
+                            "VERSION" : "1.0"
+
+                        },
+                "CONFIG":
+                        {
+                            "CSS": [
+                            ],
+                            "JS": [
+                            ]
+                        },
+                "EMBED_TAGS": {
+                },
+                "CONTENT_TAGS": {
+                }
+            }
+}  
+

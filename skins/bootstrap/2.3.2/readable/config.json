@@ -1,16 +1,38 @@
-{
-    "INFO": {
-        "name": "Readable"
-    },
-    "CSS":
-            [
-                "css/bootstrap.min.css",
-                "css/bootstrap-responsive.min.css"
-            ]
-    ,
-    "JS":
-            [
-                "js/bootstrap.min.js"
-            ]
+{"SKIN":
+            {
+                "INFO":
+                        {
+                            "NAME": "Readable",
+                            "DESCRIPTION": "Bootstrap Superhero swatch",
+                            "COMMENT": "http://bootswatch.com/",
+                            "VERSION": "2.3.2"
 
+                        },
+                "CONFIG":
+                        {
+                            "CSS":
+                                    [
+                                        "http://fonts.googleapis.com/css?family=Oswald%7CNoticia+Text"
+                                    ]
+                            ,
+                            "CSS_INLINE":
+                                    [
+                                        "css/bootstrap.min.css",
+                                        "css/bootstrap-responsive.min.css"
+                                    ]
+                            ,
+                            "JS":
+                                    [
+                                        "https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"
+
+                                    ],
+                            "JS_INLINE":
+                                    [
+                                        "js/bootstrap.min.js"
+
+                                    ]
+
+                        }
+            }
 }
+

@@ -38,6 +38,8 @@ class Downcast extends DowncastBase   {
          */
         $this->SITE_CONFIG_FILE_PATH = "config.json"; 
     
+        
+        
 
     }
     

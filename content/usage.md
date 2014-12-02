@@ -2,7 +2,7 @@
 
 ##About
 
-
+{SITE_NAME}
 
 ##Turn your Markdown Files into a Website
 
@@ -153,3 +153,13 @@ All configuration data is stored in json.config either within the content direct
 ##Examples
 
 ##How to 
+
+
+
+##Misc Notes
+
+* CSS_INLINE_ENABLED true means all css listed under CSS_INLINE will be included directly inline
+* CSS_INLINE_ENABLED false means all css listed under CSS_INLINE will be included as links
+* Any name/value pairs under the 'INFO' section of the configuration file will also be accessible by prepending 'SITE_' to it. Don't forget to add that prefix. E.g. use {SITE_TAG_LINE} not {SITE_TAG_LINE} in your temnplate
+* when configuring themes , its recommended that you set cleanup = true so you'll always be working from a fresh page.
+

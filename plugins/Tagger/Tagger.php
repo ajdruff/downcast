@@ -1,11 +1,8 @@
 <?php
-
-/*
+/**
  * Tagger DownCast Plugin
- * 
- * 
+ *
  * For specific or all urls, replace or Modify the content of any Content or Embed Tag in a Template
- * .
  * 
  * Usage:
  * Add one of the following to the config() method. See Example in comments for more.
@@ -17,9 +14,14 @@
  *   $this->modifyTag( 'SIDE_BAR', '/usage/', array( $this, 'filterAddTime' ) ); 
  * 
  * 
-
+ * 
+ * @package Downcast
+ * @author Andrew Druffner <andrew@nomstock.com>
+ * @copyright  2012 Andrew Druffner
+ * @license    http://www.php.net/license/3_01.txt  PHP License 3.01
  * 
  */
+
 
 class Tagger extends DowncastPlugin {
 
@@ -51,12 +53,14 @@ class Tagger extends DowncastPlugin {
          * Example 2 - Modify Navbar for all urls ( using '*' wildcard ) 
          * 
 
-          $different_navbar = "**My New Sidebar** | [Link 1](#) | [Link 2](#)";
+          $different_navbar = "**My New Navbar** | [Link 1](#) | [Link 2](#)";
           $different_navbar = $this->downcast()->parseMarkdown( $different_navbar );
           $this->modifyTag( 'NAV_BAR', '*' , $different_navbar);
          * 
          */
 
+
+        
         /*
          * Example 3- Remove Sidebar just from home page
          * $this->modifyTag( 'SIDE_BAR', '/' );

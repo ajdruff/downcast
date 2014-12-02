@@ -1,14 +1,26 @@
-    {
-    "INFO": {
-        "NAME": "Bare Bones"
-    },
-    "EMBED_TAGS": {
-        "SIDE_BAR": "sidebar.md"
-        ,"NAV_BAR": "navbar.md"     
-    },
-    "CONTENT_TAGS": {
-    }
+{"TEMPLATE":
+            {
+                "INFO":
+                        {
+                            "NAME": "Bare Bones",
+                            "DESCRIPTION": "Top down structure, retains styling",
+                            "COMMENT": "",
+                            "VERSION": "1.0"
+
+                        },
+                "CONFIG":
+                        {
+                        },
+                "EMBED_TAGS": {
+                    "SIDE_BAR": "sidebar.md"
+                    , "NAV_BAR": "navbar.md"
+                },
+                "CONTENT_TAGS": {
+                }
+            }
 }
 
-        
+
+
+
         

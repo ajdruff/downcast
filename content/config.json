@@ -4,7 +4,7 @@
                         {
                             "NAME": "DownCast",
                             "DOMAIN": "downcast.com",
-                            "TAG_LINE": "",
+                            "TAG_LINE": "Your Markdown Files on The Web - Downcast.com",
                             "DESCRIPTION": "My Awesome site",
                             "COMMENT": "Alternate Configuration File",
                             "VERSION": "1.0"
@@ -12,11 +12,13 @@
                         },
                 "CONFIG":
                         {
-                  
                             "SKIN": [
-                                "/bootstrap/2.3.2/superhero",
+                                "/bootstrap/2.3.2/journal",
                                 "/highlightjs/8.3"
 
+                            ],
+                            "PLUGINS": [
+                                "Skinner"
                             ],
                             "PLUGINS_INACTIVE": [
                                 "HelloWorld",
@@ -29,7 +31,10 @@
                                 "index.html",
                                 "index.html",
                                 "index.md"
-                            ]
+                            ],
+                            "CSS_INLINE_ENABLED": true,
+                            "JS_INLINE_ENABLED": true
+
                         },
                 "EMBED_TAGS": {
                     "SIDE_BAR": "sidebar.md",

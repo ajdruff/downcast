@@ -1,14 +1,21 @@
-    {
-    "INFO": {
-        "NAME": "Starter"
-    },
-    "EMBED_TAGS": {
-        "SIDE_BAR": "sidebar.md"
-        ,"NAV_BAR": "navbar.md"     
-    },
-    "CONTENT_TAGS": {
-    }
-}
+{"TEMPLATE":
+            {
+                "INFO":
+                        {
+                            "NAME": "Starter",
+                            "DESCRIPTION": "A single column, left justified, with no sidebar.",
+                            "COMMENT": "",
+                            "VERSION": "1.0"
 
-        
-        
+                        },
+                "CONFIG":
+                        {
+                        },
+                "EMBED_TAGS": {
+                    "SIDE_BAR": "sidebar.md"
+                    , "NAV_BAR": "navbar.md"
+                },
+                "CONTENT_TAGS": {
+                }
+            }
+}

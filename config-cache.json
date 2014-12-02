@@ -1,0 +1,29 @@
+{"CACHE":
+            {
+
+                "CONFIG":
+                        {
+                            "ENABLED": true,
+                            "TIMEOUT": 600,                    
+                            "CLEANUP": true,
+                            "PATH": null,
+                            "DEBUG":false
+                        },
+                "INFO":
+                        {
+                            "COMMENTS": {
+                                "Defaults": "Shipped Defaults are hardcoded using values in DowncastCacheController.php. To use, rename this file, or set setting to null, or comment out DowncastCacheController::setup() in index.php",
+                        
+                                "Are changes not taking effect?": "To see changes after a a configuration update, clear or disable browser cache and try again ",                                           
+                                "ENABLED": "True, Enables Caching; False disables caching",
+                                "CLEANUP": "If set to true, will delete all cache files with each page request.",
+                                "TIMEOUT": "Time, in seconds, before a page's cache will time out",
+                                "PATH": "Absolute or relative directory path where cache will be created. Must have 0777 permissions and contain a directory called cache.storage. If the path is not explicitly set in this file, or set to null, the web server's temp directory will be used. See Examples below",
+                                "Warning: readdir(): Error " : "You'll get this error if CLEANUP is set to true but PATH is invalid or permission to delete files is denied",
+                                "PATH_EXAMPLE1": "my-cache",
+                                "PATH_EXAMPLE2": "/wamp/tmp/my-cache",
+                                "PATH_EXAMPLE3": null                                
+                            }
+                        }                  
+            }
+}

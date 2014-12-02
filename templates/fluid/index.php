@@ -1,18 +1,33 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <meta charset="utf-8">
-        <title>{SITE_NAME} - {TAG_LINE}</title>
+      <!-- {PAGE_GENERATION_TIME} -->
+        <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
+        
+        
+        <title>{SITE_NAME} - {SITE_TAG_LINE}</title>
 
-        <!-- styles -->
+
+
+
+             <!-- script -->
+             
+
+        <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+        <!--[if lt IE 9]>
+          <script src="../assets/js/html5shiv.js"></script>
+        <![endif]-->
+
+        <!-- Fav and touch icons -->
+
+        
+                <!-- styles -->
        {CSS}
         
-         <!-- script -->
+     
 
         <style type="text/css">
             body {
@@ -32,16 +47,6 @@
                 }
             }
         </style>
-
-         
-
-        <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-        <!--[if lt IE 9]>
-          <script src="../assets/js/html5shiv.js"></script>
-        <![endif]-->
-
-        <!-- Fav and touch icons -->
-
     </head>
 
     <body>
@@ -79,6 +84,7 @@
                 </div><!--/span-->
                 <div class="span9">
           <div class="hero-unit">
+            
 {CONTENT}
           </div>
           <div class="row-fluid">
@@ -117,6 +123,7 @@
             <div>
             <footer>
                 <p>&copy; Company 2013</p> {POWERED_BY}
+
             </footer>
             </div>
         <!-- javascript
@@ -127,5 +134,3 @@
 
 </body>
 </html>
-
-

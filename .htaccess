@@ -25,5 +25,70 @@ RewriteRule ^(.*)$ index.php/$1  [L]
   Deny from all
 </Files>
 
+####### Optional Settings ##############
+#pagespeed
+#http://stackoverflow.com/a/14338721/3306354
 
+AddDefaultCharset UTF-8
+
+### Enable Cache-control
+# Setting Cache Control Headers
+# 1 day 60m x 60s x 24hrs x 1 day = 86400expiration not specified
+# BEGIN Cache-Control Headers
+# ref: http://www.samaxes.com/2009/01/more-on-compressing-and-caching-your-site-with-htaccess/
+# http://stackoverflow.com/a/2676907/3306354
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 seconds"
+  ExpiresByType image/x-icon "access plus 30 days"
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType image/gif "access plus 30 days"
+  ExpiresByType application/x-shockwave-flash "access plus 30 days"
+  ExpiresByType text/css "access plus 1 week"
+  ExpiresByType text/javascript "access plus 3 days"
+  ExpiresByType application/x-javascript "access plus 3 days"
+  ExpiresByType text/html "access plus 10 minutes"
+  ExpiresByType application/xhtml+xml "access plus 10 minutes"
+</IfModule>
+
+
+<ifModule mod_headers.c>
+
+  <filesMatch "\.(ico|jpe?g|png|gif|swf)$">
+    Header set Cache-Control "max-age=604800, public"
+  </filesMatch>
+  <filesMatch "\.(css)$">
+    Header set Cache-Control "max-age=604800, public"
+  </filesMatch>
+  <filesMatch "\.(js)$">
+    Header set Cache-Control "max-age=604800, private"
+  </filesMatch>
+  <filesMatch "\.(x?html?|php)$">
+    Header set Cache-Control "max-age=600, private, must-revalidate"
+  </filesMatch>
+</ifModule>
+# END Cache-Control Headers
+
+
+
+### Enable Compression Requires mod_deflate ##############
+
+# http://howtounix.info/howto/Apache-gzip-compression-with-mod_deflate
+
+<IfModule mod_mime.c>
+ AddType application/x-javascript .js
+ AddType text/css .css
+</IfModule>
+<IfModule mod_deflate.c>
+ AddOutputFilterByType DEFLATE text/css application/x-javascript text/x-component text/html text/richtext image/svg+xml text/plain text/xsd text/xsl text/xml image/x-icon application/javascript
+ <IfModule mod_setenvif.c>
+  BrowserMatch ^Mozilla/4 gzip-only-text/html
+  BrowserMatch ^Mozilla/4\.0[678] no-gzip
+  BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+ </IfModule>
+ <IfModule mod_headers.c>
+  Header append Vary User-Agent env=!dont-vary
+ </IfModule>
+</IfModule>
 
