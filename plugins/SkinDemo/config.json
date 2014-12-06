@@ -1,0 +1,27 @@
+{"PLUGIN":
+            {
+                "INFO":
+                        {
+                            "NAME": "Skinner",
+                            "DESCRIPTION": "Apply different skins for different pages. Just indicate which Skins that you want applied to which urls and Skinner will do the rest.",           
+                            "COMMENT" : "",
+                            "VERSION" : "1.0"
+
+                        },
+                "CONFIG":
+                        {
+                            "CSS": [
+                            ],
+                            "JS": [
+                                      "/js/dropdown.js"
+                            ]
+                        },
+                "EMBED_TAGS": {
+                },
+                "CONTENT_TAGS": {
+                }
+            }
+}  
+
+
+

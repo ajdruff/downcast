@@ -1,0 +1,23 @@
+{"PLUGIN":
+            {
+                "INFO":
+                        {
+                            "NAME": "Example - AddContent",
+                            "DESCRIPTION": "Example plkugin code showing you how a plugin can add content pages without requring the user to copy files into the content directory.",
+                            "COMMENT": "",
+                            "VERSION": "1.0"
+
+                        },
+                "CONFIG":
+                        {
+                            "CSS": [
+                            ],
+                            "JS": [
+                            ]
+                        },
+                "EMBED_TAGS": {
+                },
+                "CONTENT_TAGS": {
+                }
+            }
+}  

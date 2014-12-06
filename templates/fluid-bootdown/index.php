@@ -4,13 +4,13 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>{SITE_NAME} - {TAG_LINE}</title>
+        <title>{SITE_NAME} - {SITE_TAG_LINE}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
 
         <!-- styles -->
-        {SKIN_CSS}
+        {CSS}
         
          <!-- script -->
 
@@ -96,7 +96,7 @@
 ================================================== -->
         <!-- Placed at the end of the document so the pages load faster -->
 
-                {SKIN_JS}
+                {JS}
 
 </body>
 </html>

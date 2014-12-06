@@ -1,22 +1,41 @@
-{
-    "INFO": {
-        "name": "HighlightJs"
-    },
-    "CSS":
-            [
-                "styles/github.css"
-            ]
-    ,
-    "INACTIVE":
-            [
-                "styles/ir_black.css",
-                "styles/brown_paper.css"
-            ]
-    ,
-    "JS":
-            [
-                "highlight.pack.js",
-                "highlight-activate.js"
-            ]
+{"SKIN":
+            {
+                "INFO":
+                        {
+                            "NAME": "highlight.js",
+                            "DESCRIPTION": "Syntax highlighting for the Web",
+                            "COMMENT": "https://highlightjs.org/",
+                            "VERSION": "8.4"
 
+                        },
+                "CONFIG":
+                        {
+                            "CSS":
+                                    [
+
+                                    ]
+                            ,
+                            "CSS_INLINE":
+                                    [
+                                        "styles/github.css"
+                                    ]
+                            ,                            
+                            "CSS_INACTIVE":
+                                    [
+                                        "styles/ir_black.css",
+                                        "styles/brown_paper.css"
+                                    ]
+                            ,
+                            "JS":
+                                    [
+                                        "highlight.pack.js"
+                                        
+                                    ],
+                            "JS_INLINE":
+                                    [
+                                        "highlight-activate.js"
+                                    ]                                    
+
+                        }
+            }
 }

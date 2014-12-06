@@ -26,6 +26,26 @@ class Downcast extends DowncastBase   {
      * @return void
      */
 
+    public function config() {
+
+
+        /* 
+         * SITE_CONFIG_FILE_PATH
+         * 
+         * Set the Site Configuration File Location
+         * Absolute or relative path. 
+         * Default: "config.json"
+         */
+        $this->SITE_CONFIG_FILE_PATH = "config.json"; 
+    
+        
+        
+
+    }
+    
+    
 }
+
+
 
 ?>

@@ -1,10 +1,26 @@
-{    "PLUGIN_INFO": {
-        "name": "Templater",
-        "description": "Apply different templates for different pages. Need one template for your home page and another for your 'About' page, no problem. Just indicate which templates you want applied to which pages and Templater will do the rest.",        
-        "slug": "Templater"
-    },
-    "EMBED_TAGS": {
-    },
-    "CONTENT_TAGS": {
-    }
-}
+{"PLUGIN":
+            {
+                "INFO":
+                        {
+                            "NAME": "Templater",
+                            "DESCRIPTION": "Apply different templates for different pages. Need one template for your home page and another for your 'About' page, no problem. Just indicate which templates you want applied to which pages and Templater will do the rest.",           
+                            "COMMENT" : "",
+                            "VERSION" : "1.0"
+
+                        },
+                "CONFIG":
+                        {
+                            "CSS": [
+                            ],
+                            "JS": [
+                            ]
+                        },
+                "EMBED_TAGS": {
+                },
+                "CONTENT_TAGS": {
+                }
+            }
+}  
+
+
+

@@ -1,9 +1,27 @@
 <?php
+/**
+ * Markdowner DownCast Plugin
+ *
+ * This plugin allows you to choose which Markdown parser to use, add your own, or don't parse at all and deliver plain text. Choose from Parsedown, ParsedownExtra, PHP Markdown , PHP Markdown Extra or BootDown",  
+ * 
+ * 
+ * It does this by overriding the parseMarkdown method of the main class, and adds its own parsing method instead.
+ * 
+ * Usage:
+ * In config(); method of this class, change $this->PARSER to one of the values indicated in the comments.
+ * 
+ * @package Downcast
+ * @author Andrew Druffner <andrew@nomstock.com>
+ * @copyright  2012 Andrew Druffner
+ * @license    http://www.php.net/license/3_01.txt  PHP License 3.01
+ * 
+ */
+
 
 include ('lib/parsedown/Parsedown.php');
 include ('lib/parsedown-extra/ParsedownExtra.php');
 
-class Parsedowner extends DowncastPlugin {
+class Markdowner extends DowncastPlugin {
 
     /**
      * Configure
@@ -28,7 +46,7 @@ class Parsedowner extends DowncastPlugin {
          * $this->PARSER='Text';//Returns text with new lines replaced with <br> tags
          */
 
-        $this->PARSER = 'Text';
+        $this->PARSER = 'Bootdown';
 
 
     }

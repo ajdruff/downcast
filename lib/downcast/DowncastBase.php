@@ -1,7 +1,7 @@
 <?php
 
 /**
- * MarkdownIO (Parent Class)
+ * DowncastBase (Parent Class)
  * 
  * Manages the Downcast Web Framework
  *
@@ -16,24 +16,203 @@
  */
 class DowncastBase   {
 
+    protected $_content = null;
+
+    /**
+     * Constructor
+     *
+     * Class Constructor
+     * 
+     * Please note that the order of method calls in the constructor is 
+     * important and defines the order of precedence for which overrides what.
+     * Tags defined first override tags defined later for instance.
+     * Plugins need access to site configuration
+     *
+     * @param $is_content boolean Flags whether the instance is being used to parse content (true) or the main template file (false). 
+     * @return void
+     */
+    public function __construct( $is_content = false ){
+
+
+
+        $this->doActionHooks( 'dc_controller_start' );
+
+        $this->is_content = $is_content;
+
+
+
+        $this->_config(); //internal defaults
+
+        $this->config(); //user configuration and Tags
+
+        /*
+         * Load Site Configuration File
+         */
+        
+        $this->_loadSiteConfigFile();
+
+        /*
+         * Add SITE CONTENT_TAGS
+         */
+        $this->addContentTags( $this->CONFIG[ 'SITE' ][ 'CONTENT_TAGS' ] );
+
+
+        /*
+         * Convert Site INFO Tags into Content Tags
+         */
+        $this->addContentTags( $this->CONFIG[ 'SITE' ][ 'INFO' ], 'SITE_' );
+
+
+        /*
+         * Add SITE Embed Tags
+         */
+        $this->addEmbedTags( $this->CONFIG[ 'SITE' ][ 'EMBED_TAGS' ] );
+
+
+        $this->_loadPlugins(); //reads plugin configuration,adds plugin tags, creates plugin objects and assigns to $this->plugins()
+        $this->doActionHooks( 'dc_plugins_loaded' );
+        $this->_initPlugins(); //calls the init() method for each plugin
+        $this->doActionHooks( 'dc_plugins_initialized' );
+
+
+
+
+
+
+        /*
+         * Must Add {CONTENT} Embed Tag 
+         * Path is always uri when getting content of the page
+         * 
+         */
+
+
+
+
+
+        $page_info = $this->getPageInfo();
+        $this->doActionHooks( 'dc_page_info' ); //content loaded, page_info determined
+
+
+
+
+
+
+
+        /*
+         * Load Template Configuration File
+         */
+
+
+
+        $this->_loadTemplateConfigFile();
+
+        /*
+         * Add Template CONTENT_TAGS
+         */
+
+        $this->addContentTags( $this->CONFIG[ 'TEMPLATE' ][ 'CONTENT_TAGS' ] );
+
+        /*
+         * Add Template Embed Tags
+         */
+
+        $this->addEmbedTags( $this->CONFIG[ 'TEMPLATE' ][ 'EMBED_TAGS' ] );
+
+
+        $this->_loadSkinConfigFile();
+
+
+        $this->doActionHooks( 'dc_configuation_complete' );
+
+        //   $this->_addTags(); //add site and template content and embed tags
+
+
+
+
+
+
+        $this->doActionHooks( 'dc_resources_start' );
+        $this->_addCssAndJsTags(); //define CSS and Javascript Template Tags
+        $this->doActionHooks( 'dc_resources_end' );
+
+
+
+        if ( $page_info[ 'file_exists' ] ) {
+            $this->_addFileEmbedTag( 'CONTENT', $page_info[ 'file_path' ] );
+      } else {
+
+
+            header( "HTTP/1.0 404 Not Found", false );
+
+
+            $this->addEmbedTag( 'CONTENT', "errors/404/index.md?page_not_found=" . $page_info[ 'url' ] );
+
+      }
+
+
+
+
+
+        $this->_init();
+
+    }
+
     private $_page_info = null;
 
     /**
-     * Returns Page Info
+     * Config (internal)
      *
-     * Returns the scrubbed version of the page url, file path, query string,etc.
-     *
+     * Configure Plugin - Use this to set defaults. Some defaults are not set here though ( like Site Config settings - see _addMissingSiteConfig() )
      * @param none
-     * @return array An array of the url and file parts
+     * @return void
      */
-    public function getPageInfo() {
+    private function _config() {
+        /*
+         * Root Directory Path
+         * This is the path to the application's root directory (not CONTENT_ROOT);
+         * assumes this file resides in /lib/downcast/
+         * Use $this->getAbsPath() to retrieve its value 
+         */
+        $this->setRootDirectory( dirname( dirname( dirname( __FILE__ ) ) ) );
 
-        if ( is_null( $this->_page_info ) ) {
-            $this->_page_info = array();
+
+        /*
+         * Debug
+         */
+        $this->DEBUG = TRUE;
+        $this->DEBUG_SHOW_ERRORS = TRUE;
+        $this->DEBUG_FILE = $this->file_joinPaths( $this->getRootDirectory(), '/downcast-error.log' );
+
+
+        $this->STRING_DEBUG_LABEL = '<br><br><div>DownCast Error:</div>';
+        $this->DEBUG_LOG_TO_FILE = TRUE;
+
+
+        /*
+         * Add Debug Filters
+         */
+
+        // $this->debugHooks();
+        //$this->debugAddFilter('doActionHooks');
+        //  $this->debugAddFilter( 'render_page' );
+        //$this->debugAddFilter('embed_tags');   
+       //$this->debugAddFilter('content-tags');       
+        //  $this->debugAddFilter('plugin_skinner');
+
+
+
+        /*
+         * Set the Site Configuration File Location
+         * Absolute or relative path. 
+         * Default: "config.json"
+         */
+        $this->SITE_CONFIG_FILE_PATH = "config.json";
+
+
+
+
+
 }
-        return $this->_page_info;
-
-        }
 
     /**
      * Short Description
@@ -57,35 +236,11 @@ class DowncastBase   {
      */
     private function _init() {
 
-        /*
-         * Add Plugins
-         * Need to add plugins first before tags are added or filters wont work
-         */
-        //$this->addPlugin( 'HelloWorld' );
-        //$this->addPlugin( 'Parsedowner' );
-        // $this->addPlugin( 'Parsedowner' );
-        // $this->addPlugin( 'JustText' );
-        //$this->addPlugin( 'Templater' );
-        $this->addPlugin( 'Tagger' );
+
         /*
          * Add Site Configuration
          */
 
-        $this->readConfigFile( "config.json" );
-
-
-        /*
-         *  Add Template Configuration 
-         */
-
-        $this->readConfigFile( "templates/" . strtolower( $this->TEMPLATE ) . "/config.json" );
-
-
-        /*
-         *  Add Skin Configuration
-         */
-
-        $this->readSkinConfigFiles( $this->SKIN );
 
 
 
@@ -93,55 +248,36 @@ class DowncastBase   {
 
 
 
-        /*
-         * Must Add Content Template Tag - This is common to all templates
-         */
-        $this->addEmbedTag( 'CONTENT', null );
 
 
-        /*
-         * Add a Tag for Each Configuration Setting
-         * This allows you to use configuration settings within templates
-         */
-        foreach ( $this->_getProperties() as $name => $value ) {
 
-            $this->addContentTag( $name, $value );
-
-}
 
         /*
          * Add Powered By Tag
          */
-        $this->addContentTag( 'POWERED_BY', '<a href="#"><span class="label">Powered by DownDraft &reg;</a></a>' );
+        $this->addContentTag( 'POWERED_BY', '<a href="#"><span class="label">Powered by DownCast &reg;</span></a>' );
+        $this->addContentTag( 'PAGE_GENERATION_TIME', 'Page Generation Time: ' . date( 'Y-m-d H:i:s' ) );
 
 
 
     }
 
     /**
-     * Config (internal)
+     * Returns Page Info
      *
-     * Configure Plugin - Use this to set defaults. 
+     * Returns the scrubbed version of the page url, file path, query string,etc.
+     * @deprecated
      * @param none
-     * @return void
+     * @return array An array of the url and file parts
      */
-    private function _config() {
+    public function getPageInfo_v1() {
 
-        /*
-         * Set Defaults
-         */
-        $this->setConfig(
-                'SKIN', 'bootstrap/2.3.2/default'
-        );
-        $this->setConfig(
-                'TEMPLATE', 'fluid'
-        );
-        $this->setConfig( 'CONTENT_TAGS', null );
-
-
-
-
+        if ( is_null( $this->_page_info ) ) {
+            $this->_page_info = array();
 }
+        return $this->_page_info;
+
+        }
 
     /**
      * Add Tag
@@ -167,82 +303,252 @@ class DowncastBase   {
      * @param none
      * @return void
      */
-    public function addEmbedTag( $tag_name, $file_path ) {
+    public function addEmbedTag( $tag_name, $url ) {
 //only add template tags if we are not parsing content or we'll end up in a loop
 
-        if ( !$this->_content ){
 
-            $tags = $this->_config_properties[ 'EMBED_TAGS' ];
-            /*
-             * Add a Tag only If one Doesn't Already Exist
-             * This means that settings added by the user in Downcast.php will
-             * override those that are added in config.php of the theme.
-             * It also means that the user cannot override the settings created in _config()
-             */
-            if ( !isset( $tags[ $tag_name ] ) ){
-                $tags[ $tag_name ] = $this->renderPage( $file_path, false );
-        } else {
 
-                //        echo '<br>' . $tag_name .' already set, not setting again';
+        $file_info = $this->getFileFromUrl( $url );
+
+
+        return ($this->_addFileEmbedTag( $tag_name, $file_info[ 'file_path' ] ));
+
+}
+
+    /**
+     * Add File Embed Tag ( private ) 
+     *
+     * Adds the rendered contents of a file to a tag
+     * Difference between this and addEmbedTag is that its private,
+     * and assumes that the file_path has been validated.
+     *
+     * @param string $tag_name The name of the tag 
+     * @param string $file_path The path to the file
+     * @return void
+     */
+    private function _addFileEmbedTag( $tag_name, $file_path ) {
+//only add template tags if we are not parsing content or we'll end up in a loop
+
+        $this->debugLog( '$tag_name = ', $tag_name, 'embed_tags', false );
+        $this->debugLog( '$file_path = ', $file_path, 'embed_tags', false );
+
+
+        $tags = $this->_config_properties[ 'EMBED_TAGS' ];
+        /*
+         * Add a Tag only If one Doesn't Already Exist
+         * This means that settings added by the user in Downcast.php will
+         * override those that are added in config.php of the theme.
+         * It also means that the user cannot override the settings created in _config()
+         */
+
+
+
+        if ( !isset( $tags[ $tag_name ] ) ){
+
+            $tags[ $tag_name ] = $this->renderFile( $file_path );
+            $this->debugLog( $tag_name . ' = ', $tags[ $tag_name ], 'embed_tags', false );
+            $this->debugLog( '$tags = ', $tags, 'render_page', false );
 
         }
-            $this->setConfig( 'EMBED_TAGS', $tags );
+        $this->setConfig( 'EMBED_TAGS', $tags );
+
+
 
 
 }
 
+    /**
+     * Get Page Info
+     *
+     * Returns an array of page info for the page being requested by REQUEST_URI
+     * 'url'
+     * 'file_path'
+     * 'file_extension'
+     *  replaces getPageInfo_v1()
+     * 
+     * @param none
+     * @return void
+     */
+    public function getPageInfo() {
+
+        if ( !is_null( $this->_page_info ) ) {
+            return $this->_page_info;
 }
 
-    protected $_content = null;
 
-    /**
-     * Constructor
-     *
-     * Class Constructor
-     *
-     * @param $content boolean Flags whether the instance is being used to parse content (true) or the main template file (false). 
-     * @return void
-     */
-    public function __construct( $content = false ){
-        $this->doActionHooks( '_dc_controller_start' );
-
-        $this->_content = $content;
-
-        $this->_config();
-        $this->config();
-        $this->_init();
-
-    }
-
-    /**
-     * Render Page
-     *
-     * Renders a markdown page passed to it if markdown, otherwise serves it. 
-     *
-     * @param $file_path string The relative path to
-     * @return void
-     */
-    public function renderPage( $url = null, $echo = true ) {
-
-
-        //if no path given, assume its the request_uri
-        if ( is_null( $url ) ){ $url = $_SERVER[ 'REQUEST_URI' ]; }
+        $url = $_SERVER[ 'REQUEST_URI' ];
 
         //initialize
-        $file = array();
-        $markdown = false;
         $url = $this->addLeadingSlash( $url );
+
         /*
          * Resolve Url To a File
          * 
          */
-        $file = $this->getFileFromUrl( $url );
+
+
+        $this->_page_info = $this->getFileFromUrl( $url );
+
+
+
+
+        /*
+         * Earliest that $url can be determined correctly
+         */
+        $this->doActionHooks( 'dc_page_info' );
+
+        return $this->_page_info;
+
+
+############# end get file
+
+
+     }
+
+    /*
+     * @var string
+     * @deprecated
+     */
+
+    private $_render_cache = null;
+
+    /**
+     * Render File
+     *
+     * Renders the contents of a file by resolving its Markdown and Template tags
+     * Does not attempt to ensure that the file exists.
+     *
+     * @param $file_path string The path to the file
+     * @param $render_markdown bool True to process markdown, false to skip.
+     * @return string The rendered contents of the file
+     */
+    public function renderFile( $file_path, $render_markdown = true ) {
+
+
+        /*
+         * First check memory cache in case
+         * this is the second time rendering the  file
+         */
+        if ( isset( $this->$_render_cache[ $file_path ] ) ) {
+            return $this->$_render_cache[ $file_path ];
+}
+
+        $this->debugLog( '$file_path = ', $file_path, 'render_page', false );
+
+        $this->debugLog( '$this->CONTENT_TAGS = ', $this->CONTENT_TAGS, 'render_page', false );
+
+        /* SAFE_PARSE = true 
+         * For security reasons, we only execute the file
+         * if it has a php extension
+         * This means that only templates can successfully execute php within them
+         * It is assumed that markdown docs may be available publically.
+         * 
+         * SAFE_PARSE = false , all files are included, allowing PHP to execute for an file extension
+         */
+        if ( $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SAFE_PARSE' ] ) {
+
+
+            $file = pathinfo( $file_path );
+            if ( $file[ 'extension' ] === 'php' ) {
+                ob_start();
+
+
+                include($file_path);
+                $file_contents = ob_get_clean();
+} else {
+
+                $file_contents = file_get_contents( $file_path );
+
+}
+
+} else {
+
+            ob_start();
+
+
+            include($file_path);
+            $file_contents = ob_get_clean();
+
+
+}
+
+
+
+        $tags = $this->CONTENT_TAGS;
+        if ( !is_array( $tags ) )
+            {
+            $tags = array();
+}
+        /*
+         * Merge in the Embed Tags 
+         */
+        if ( is_array( $this->EMBED_TAGS ) ){
+            $tags = array_merge( $tags, $this->EMBED_TAGS );
+            }
+
+        $this->debugLog( 'rendering $file_path = ', $file_path, 'content-tags', false );
+        $this->debugLog( '$this->CONTENT_TAGS = ', $this->CONTENT_TAGS, 'content-tags', false );
+ $this->debugLog( '$tags = ', $tags, 'content-tags', false );
+
         /*
          * Render File If Exists
          * 
          */
 
+        $html = $this->crunchTpl( $tags, $file_contents );
+        if ( $render_markdown ){
+            $this->_render_cache[ $file_path ] = $this->parseMarkdown( $html );
+        } else {
+            $this->_render_cache[ $file_path ] = ( $html );
+        }
 
+        return($this->_render_cache[ $file_path ]);
+
+
+
+         }
+
+    /**
+     * Render Page
+     *
+     * Renders a markdown page passed to it if markdown, otherwise serves it. 
+     * @deprecated
+     * @param $file_path string The relative path to
+     * @return void
+     */
+    public function renderPage( $url, $echo = true ) {
+
+
+
+        //initialize
+        $file = array();
+        $markdown = false;
+        $url = $this->addLeadingSlash( $url );
+
+        /*
+         * Resolve Url To a File
+         * 
+         */
+
+
+        $file = $this->getFileFromUrl( $url );
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /*
+         * Render File If Exists
+         * 
+         */
 
 
 
@@ -253,7 +559,7 @@ class DowncastBase   {
                 case 'md':
 
 
-                    // echo ( $this->parseMarkdown( (file_get_contents( $file[ 'path' ] ) ) ));
+
 
 
                     $markdown = true;
@@ -276,6 +582,7 @@ class DowncastBase   {
             if ( $echo )
         {
                 if ( $markdown ){
+
                     echo ( $this->parseMarkdown( ($this->renderTemplate( $file[ 'path' ], false ) ) ));
                         } else {
 
@@ -299,20 +606,21 @@ class DowncastBase   {
             } else {
 
             /*
-             * Generate 404 if page does not exist
+             * Generate 404 if file is not found
+             * We check first to see if the REQUEST_URI matches the url argument
+             * If not, its an included file and we don't want to return a 404 for it, but
+             * we'll still generate a 'page not found' page
              */
 
-
-            # header( "Location: " );
-            //  header( "HTTP/1.0 404 Not Found" );
-            header( "HTTP/1.0 404 Not Found" );
+            if ( $url === $_SERVER[ 'REQUEST_URI' ] ) {
 
 
+                header( "HTTP/1.0 404 Not Found", false );
+
+              }
             return ( $this->parseMarkdown( ($this->renderPage( "errors/404/index.md?page_not_found=" . $url, false ) ) ));
 
-            //  echo '<pre>', print_r( $this->EMBED_TAGS, true ), '</pre>';
-            //  header( 'Location: /errors/404/' );
-            //   $error_file = $this->joinPaths( $this->CONTENT_ROOT, "/404.md" );
+
 
 
             }
@@ -331,8 +639,10 @@ class DowncastBase   {
      */
     public function addLeadingSlash( $path ) {
 
-        $path = ltrim( $path, '/' );
-        return '/' . $path;
+
+        $result = '/' . ltrim( $path, '/' );
+
+        return $result;
 
     }
 
@@ -393,16 +703,22 @@ class DowncastBase   {
         return $this->_config_properties;
     }
 
+    /*
+     * @var
+     * 
+     * @deprecated
+     */
+
+    private $_template_cache = array();
+
     /**
      * Get Template
-     *
+     * @deprecated
      * Returns the template as a string, uses cache if already accessed
      *
      * @param string $template_name The base name of the template file, without the extension
      * @return string
      */
-    private $_template_cache = array();
-
     public function getTemplate( $template_path ) {
 
 
@@ -426,8 +742,63 @@ class DowncastBase   {
     }
 
     /**
-     * Render Template
+     *  getRenderedFileContents()  - Get Rendered File Contents
+     * @deprecated
+     * 
+     * This method never used
      *
+     * Returns the parsed contents of a file.
+     * 
+     * Usage: Like file_get_contents , nothing rendered:
+     * $my_contents=getRenderedFileContents( $path='/path/to/file',$markdown=false,$embed_tags=false,$content_tags=false) 
+     * Everything rendered: 
+     * $my_contents=getRenderedFileContents( $path='/path/to/file',$markdown=true,$embed_tags=true,$content_tags=true) 
+     * 
+     * @param $path string The path to the file to be rendered
+     * @param $markdown bool Whether you want to have the file parsed for markdown
+     * @param $embed_tags bool True to render EMBED_TAGS , false to not render
+     * @param $content_tags bool True to render CONTENT_TAGs , false to not render
+     * @return string File contents
+     */
+    public function getRenderedFileContents( $path, $markdown = true, $embed_tags = true, $content_tags = true ) {
+
+
+        /*
+         * Get the Template
+         */
+
+
+        $template = $this->getTemplate( $template_path );
+
+
+
+        $tags = $this->CONTENT_TAGS;
+        if ( !is_array( $tags ) ) {
+            $tags = array();
+}
+        /*
+         * Merge in the Embed Tags But Only If we are parsing the template (not the content)
+         */
+        if ( !$this->is_content ){
+
+            if ( is_array( $this->EMBED_TAGS ) ){
+                $tags = array_merge( $tags, $this->EMBED_TAGS );
+            }
+        }
+
+        $html = $this->crunchTpl( $tags, $template );
+
+        if ( $echo )
+        { echo $html; } else
+            {
+            return $html;
+            }
+
+    }
+
+    /**
+     * Render Template
+     * @deprecated
      * Renders the template using the tags configured on config()
      *
      * @param $template_path The path to the template file
@@ -444,7 +815,7 @@ class DowncastBase   {
 
         $template = $this->getTemplate( $template_path );
 
-        //echo '<pre>', print_r( $this->EMBED_TAGS, true ), '</pre>';
+
 
         $tags = $this->CONTENT_TAGS;
         if ( !is_array( $tags ) ) {
@@ -453,7 +824,8 @@ class DowncastBase   {
         /*
          * Merge in the Embed Tags But Only If we are parsing the template (not the content)
          */
-        if ( !$this->_content ){
+        if ( !$this->is_content ){
+
             if ( is_array( $this->EMBED_TAGS ) ){
                 $tags = array_merge( $tags, $this->EMBED_TAGS );
             }
@@ -508,7 +880,7 @@ class DowncastBase   {
          */
         foreach ( $tags as $key => $value ) {
 
-            // $this->_config_properties[ 'EMBED_TAGS' ][ 'CONTENT' ] = $this->applyTagFilters( 'CONTENT', $this->_config_properties[ 'EMBED_TAGS' ][ 'CONTENT' ] );
+
 
             $value = $this->applyTagFilters( $key, $value );
             if ( is_array( $value ) || is_object( $value ) ) {
@@ -543,7 +915,8 @@ class DowncastBase   {
      * Join Paths
      *
      * Joins the paths of multiple file paths together
-     *
+     * @deprecated Use file_joinPaths instead
+     * @see file_joinPaths 
      * @param $path string file path 
      * @return void
      */
@@ -558,14 +931,230 @@ class DowncastBase   {
 }
 
     /**
+     * Join Paths (File Library)
+     *
+     * Joins the paths of multiple file paths together
+     * @param $path string file path 
+     * @return void
+     */
+    function file_joinPaths() {
+        $paths = array();
+
+        foreach ( func_get_args() as $arg ) {
+            if ( $arg !== '' ) { $paths[] = addslashes( $arg ); }
+    }
+
+
+        $paths = array_map( array( $this, 'file_convertToForwardSlashes' ), $paths );
+
+
+
+        $result = preg_replace( '#/+#', '/', join( '/', $paths ) );
+
+
+        return $result;
+}
+
+    /**
+     * Read Configuration File
+     *
+     * Reads Configuration File and assigns settings to properties
+     *
+     * @param mixed A file path or an array of file paths
+     * @return void
+     */
+    public function readConfigFile( $_config_file_path ) {
+
+
+
+
+        /*
+         * Resolve real file
+         */
+
+        $config_file_path = $this->file_getRealPath( $_config_file_path );
+
+
+
+        /*
+         * If file doesn't exist, return
+         * 
+         */
+        if ( $config_file_path === false ) {
+            return false;
+
+} else {
+            /*
+             * If Json File exists,
+             * Read it into a string
+             */
+            $json_config_string = file_get_contents( $config_file_path );
+}
+
+
+
+
+        /*
+         * Make sure that $this->CONFIG is an array or merges will fail
+         */
+        if ( !isset( $this->CONFIG ) || !is_array( $this->CONFIG ) ){
+            $this->CONFIG = array();
+
+}
+
+        /*
+         * Decode Json into an array
+         */
+        $array_config = json_decode( $json_config_string, true );
+
+        if ( !is_array($array_config)) {
+                        $error_title = "<br>Unable to process corrupted configuration file " . $config_file_path . "'";
+            $error_details = 'To check for syntax errors in your json configuration file, copy and paste its contents into jsonlint: : <a href="http://jsonlint.com/">http://jsonlint.com/</a>';
+
+            $this->debugLogError( $error_title, $error_details );
+            return false;
+            
+    
+}
+        /*
+         * Check if this is the site config file, and if so, check
+         * if it's content_root has an alternate config file
+         */
+        if ( isset( $array_config[ 'SITE' ][ 'CONFIG' ] ) ){
+
+            /*
+             * check for a CONTENT setting. If true, look for an alternate setting file
+             */
+
+
+            if ( isset( $array_config[ 'SITE' ][ 'CONFIG' ][ 'CONTENT_ROOT' ] ) //check if there is a CONTENT_ROOT setting
+                    && ($this->file_isSameDirectory( dirname( $config_file_path ), $this->getRootDirectory() ) ) ){ // and CONTENT_ROOT not set yet. This protects us from circular loop if 'CONTENT_ROOT' is in the config.json of the CONTENT_ROOT.
+                //    $this->setConfig( 'CONTENT_ROOT', $array_config[ SITE ][ 'CONFIG' ][ 'CONTENT_ROOT' ] );
+
+                /*
+                 * Set Content Root
+                 * This is the only place it will be set 
+                 */
+                $this->CONTENT_ROOT = $array_config[ 'SITE' ][ 'CONFIG' ][ 'CONTENT_ROOT' ];
+                $alternate_config_file = $this->file_joinPaths( $array_config[ 'SITE' ][ 'CONFIG' ][ 'CONTENT_ROOT' ], "/config.json" );
+
+
+                if ( $this->readConfigFile( $alternate_config_file ) === true ){
+
+                    return true;
+                     }
+
+                }
+
+
+    }
+
+
+
+
+
+        /*
+         * Use the first key to tell us how to merge $array_config into 
+         * the CONFIG property
+         */
+        reset( $array_config );
+        $first_key = key( $array_config );
+        reset( $array_config );
+
+        switch ( $first_key ){
+
+            case 'SITE':
+                $array_config = $this->_addMissingSiteConfig( $array_config );
+                $this->CONFIG[ 'SITE' ] = $array_config[ 'SITE' ];
+                $this->CONFIG[ 'SITE' ][ 'META' ][ 'CONFIG_FILE' ] = $config_file_path;
+
+
+                break;
+            case 'PLUGIN':
+                $plugin_id = basename( dirname( $config_file_path ) );
+                $this->CONFIG[ 'PLUGIN' ][ $plugin_id ] = $array_config[ 'PLUGIN' ];
+                $this->CONFIG[ 'PLUGIN' ][ $plugin_id ][ 'META' ][ 'CONFIG_FILE' ] = $config_file_path;
+                break;
+            case 'TEMPLATE':
+                $this->CONFIG[ 'TEMPLATE' ] = $array_config[ 'TEMPLATE' ];
+                $this->CONFIG[ 'TEMPLATE' ][ 'META' ][ 'CONFIG_FILE' ] = $config_file_path;
+                break;
+            case 'SKIN':
+
+
+                $skin_id = dirname( $_config_file_path );
+                $this->CONFIG[ 'SKIN' ][ $skin_id ] = $array_config[ 'SKIN' ];
+                $this->CONFIG[ 'SKIN' ][ $skin_id ][ 'META' ][ 'CONFIG_FILE' ] = $config_file_path;
+                break;
+
+
+
+}
+
+
+        return true; //remove for debugging only
+
+
+        /*
+         * Add Content Tags
+         */
+        if ( isset( $array_config[ 'CONTENT_TAGS' ] ) ){
+            foreach ( $array_config[ 'CONTENT_TAGS' ] as $tag_name => $tag_value ) {
+
+                $this->addContentTag( $tag_name, $tag_value );
+
+}
+    }
+        /*
+         * Add Embed Tags
+         */
+        if ( isset( $array_config[ 'EMBED_TAGS' ] ) ){
+            foreach ( $array_config[ 'EMBED_TAGS' ] as $tag_name => $tag_value ) {
+
+                $this->addEmbedTag( $tag_name, $tag_value );
+
+}
+    }
+        if ( false ){
+            /*
+             * Add Plugins
+             */
+
+            if ( isset( $array_config[ 'CONFIG' ][ 'PLUGINS' ] ) ){
+                /*
+                 * Read their plugin file
+                 */
+                foreach ( $array_config[ 'CONFIG' ][ 'PLUGINS' ] as $key => $plugin_name ) {
+
+                    $this->readConfigFile( $this->file_joinPaths( 'plugins', $plugin_name, "/config.json" ) );
+
+                    $this->_addPluginCSSandJs( $array_config[ 'CONFIG' ][ 'PLUGINS' ] );
+                    /*
+                     * Include their plugin file
+                     */
+                    $plugin_file = $this->file_joinPaths( 'plugins', $plugin_name, '/plugin.php' );
+
+                    @include_once( $plugin_file);
+
+
+
+
+}
+    }
+    }
+
+        return true;
+    }
+
+    /**
      * Read Configuration File
      *
      * Reads Configuration File and Sets Configuration
-     *
+     * @deprecated
      * @param none
      * @return void
      */
-    public function readConfigFile( $config_file_path ) {
+    public function readConfigFileOLD( $config_file_path ) {
         /*
          *  Add Template Configuration 
          */
@@ -597,7 +1186,7 @@ class DowncastBase   {
 
                 $this->setConfig( 'CONTENT_ROOT', $array_config[ 'CONFIG' ][ 'CONTENT_ROOT' ] );
 
-                $alternate_config_file = $this->joinPaths( $array_config[ 'CONFIG' ][ 'CONTENT_ROOT' ], "/config.json" );
+                $alternate_config_file = $this->file_joinPaths( $array_config[ 'CONFIG' ][ 'CONTENT_ROOT' ], "/config.json" );
 
                 if ( $this->readConfigFile( $alternate_config_file ) === true ){
 
@@ -641,20 +1230,20 @@ class DowncastBase   {
             /*
              * Add Plugins
              */
-            // echo '<pre>', print_r( $array_config, true ), '</pre>';
+
             if ( isset( $array_config[ 'CONFIG' ][ 'PLUGINS' ] ) ){
                 /*
                  * Read their plugin file
                  */
                 foreach ( $array_config[ 'CONFIG' ][ 'PLUGINS' ] as $key => $plugin_name ) {
 
-                    $this->readConfigFile( $this->joinPaths( 'plugins', $plugin_name, "/config.json" ) );
+                    $this->readConfigFile( $this->file_joinPaths( 'plugins', $plugin_name, "/config.json" ) );
 
-                    $this->addPluginCSSandJs( $array_config[ 'CONFIG' ][ 'PLUGINS' ] );
+                    $this->_addPluginCSSandJs( $array_config[ 'CONFIG' ][ 'PLUGINS' ] );
                     /*
                      * Include their plugin file
                      */
-                    $plugin_file = $this->joinPaths( 'plugins', $plugin_name, '/plugin.php' );
+                    $plugin_file = $this->file_joinPaths( 'plugins', $plugin_name, '/plugin.php' );
 
                     @include_once( $plugin_file);
 
@@ -676,7 +1265,7 @@ class DowncastBase   {
      * @param $plugins mixed The plugins relative path to its root directory. Either a string or an array
      * @return void
      */
-    public function addPluginCSSandJs( $plugins ) {
+    public function _addPluginCSSandJsOLD( $plugins ) {
 
         $css_string;
         $js_string = '';
@@ -693,7 +1282,7 @@ class DowncastBase   {
 
         foreach ( $plugins as $plugin_key => $root_directory ) {
             $root_directory = strtolower( $root_directory );
-            $config_file = $this->joinPaths( 'plugins/', $root_directory, "/config.json" );
+            $config_file = $this->file_joinPaths( 'plugins/', $root_directory, "/config.json" );
 
             if ( file_exists( $config_file ) ) {
                 $json_config = file_get_contents( $config_file );
@@ -707,7 +1296,7 @@ class DowncastBase   {
 
                 foreach ( $array_config[ 'PLUGIN_CSS' ] as $css_key => $link ) {
 
-                    $link = $this->joinPaths( "/plugins/", $root_directory, $link );
+                    $link = $this->file_joinPaths( "/plugins/", $root_directory, $link );
                     $css_string .="\n<link href=\"$link\" rel=\"stylesheet\">";
 
 
@@ -719,7 +1308,7 @@ class DowncastBase   {
         }
                 foreach ( $array_config[ 'PLUGIN_JS' ] as $js_key => $link ) {
 
-                    $link = $this->joinPaths( "/plugins/", $root_directory, $link );
+                    $link = $this->file_joinPaths( "/plugins/", $root_directory, $link );
                     $js_string .="\n<script src=\"$link\"></script>";
 
 }
@@ -727,8 +1316,8 @@ class DowncastBase   {
 }
 }
 
-        $this->addContentTag( "PLUGIN_CSS", $css_string );
-        $this->addContentTag( "PLUGIN_JS", $js_string );
+        $this->addContentTag( "CSS", $css_string );
+        $this->addContentTag( "S", $js_string );
 
     }
 
@@ -736,11 +1325,11 @@ class DowncastBase   {
      * Read Skin Configuration Files
      *
      * Reads the Skin Configuration Files Configured in the root config.json and creates the associated content tags
-     *
+     * @deprecated
      * @param $skin mixed The skin's relative path to its root directory. Either a string or an array of strings
      * @return void
      */
-    public function readSkinConfigFiles( $skin_root_directories ) {
+    public function readSkinConfigFilesOLD( $skin_root_directories ) {
 
         $css_string;
         $js_string = '';
@@ -770,7 +1359,7 @@ class DowncastBase   {
 
                 foreach ( $array_skin_config[ 'CSS' ] as $css_key => $link ) {
 
-                    $link = $this->joinPaths( "/skins/", $skin_root_directory, $link );
+                    $link = $this->file_joinPaths( "/skins/", $skin_root_directory, $link );
                     $css_string .="\n<link href=\"$link\" rel=\"stylesheet\">";
 
 
@@ -782,7 +1371,7 @@ class DowncastBase   {
         }
                 foreach ( $array_skin_config[ 'JS' ] as $js_key => $link ) {
 
-                    $link = $this->joinPaths( "/skins/", $skin_root_directory, $link );
+                    $link = $this->file_joinPaths( "/skins/", $skin_root_directory, $link );
                     $js_string .="\n<script src=\"$link\"></script>";
 
 }
@@ -799,11 +1388,14 @@ class DowncastBase   {
      * Get File From Url
      *
      * Returns a file based on order or precedence
-     *
+     * 
+     * replaces getFileFromUrl_v1
+     * 
      * @param $url string The requested url
      * @return mixed The path to the file or false if it could not be found
      */
     public function getFileFromUrl( $url ) {
+
 
 
         /*
@@ -814,6 +1406,8 @@ class DowncastBase   {
         $file_info = pathinfo( $url_info[ 'path' ] );
 
 
+
+
         /*
          * Add Trailing Slash
          * If not a file.
@@ -822,13 +1416,217 @@ class DowncastBase   {
         if ( !isset( $file_info[ 'extension' ] ) ) {
             $url_info[ 'path' ] = $this->addTrailingSlash( $url_info[ 'path' ] );
 
-            $url=$url_info['path'];
+            $url = $url_info[ 'path' ];
         }
-        //          echo 'File Info<pre>', print_r( $file_info, true ), '</pre>';
-        //   echo 'Url Info<pre>', print_r( $url_info, true ), '</pre>';
+
 
         /*
-         * Add a Content Tag for Each Query Variable so We can add them to Content if we want
+         * Add a Content Tag for Each Query Variable so We can add their values as content tags if we want
+         */
+        if ( isset( $url_info[ 'query' ] ) ){
+            parse_str( $url_info[ 'query' ], $query_vars );
+
+            foreach ( $query_vars as $key => $value ) {
+                $this->addContentTag( $key, $value );
+}
+}
+
+        /*
+         * Add any pages that were added by plugins
+         * Add these to the top of the default files so they override any other
+         */
+        if ( in_array( $url, array_keys( $this->_getPages() ) ) ) {
+            $default_files[] = (file_exists( $this->_pages[ $url ] ) ? $this->_pages[ $url ] : null );
+
+
+}
+
+
+        /* Sample result for url=http://bootdown.com/myphp.php?test=1
+         * 
+         * $url_info
+          (
+          [path] => /myphp.php
+          [query] => test=1
+          )
+          file_info
+          (
+          [dirname] => \
+          [basename] => myphp.php
+          [extension] => php
+          [filename] => myphp
+          )
+
+
+
+
+         */
+        /*
+         * 
+         * 
+         */
+        /*
+         * Determine True File Path and Extension
+         * 
+         * 
+         * 
+         */
+
+        /*
+         * If the url includes a file extension, use that file
+         */
+        if ( isset( $file_info[ 'extension' ] ) ){
+            $file[ 'extension' ] = $file_info[ 'extension' ];
+            $file[ 'path' ] = $this->file_getRealPath( ($this->file_joinPaths( $this->CONTENT_ROOT, $url_info[ 'path' ] ) ) );
+            /*
+             * If the file does not exist in the 'content' directory, check for it
+             * outside the content directory
+             */
+            if ( $file[ 'path' ] === false ) {
+                $file[ 'path' ] = $this->file_getRealPath( $this->file_joinPaths( $url_info[ 'path' ] ) );
+
+}
+
+
+} else //otherwise, if it ends in a slash, assume you want to serve index.md
+        {
+
+            /*
+             *  Get File From URL
+             * If URL Ends in Slash
+             *  Look for a file in order of precedence
+              Example: http://example.com/about/
+              (
+              [0] => C:/wamp/www/example.com/about.md
+              [1] => C:/wamp/www/example.com/content/about.md
+              [2] => C:/wamp/www/example.com/content/about/index.php
+              [3] => C:/wamp/www/example.com/content/about/index.html
+              [4] => C:/wamp/www/example.com/content/about/index.html
+              [5] => C:/wamp/www/example.com/content/about/index.md
+              )
+             * This 
+             * This array will be a number of possible files that will
+             */
+
+
+            /*
+             * Add /about.md
+             * 
+              [0] => C:/wamp/www/example.com/about.md
+
+             */
+            $default_files[] = ( $this->file_getRealPath( $this->file_joinPaths( $file_info[ 'dirname' ], $file_info[ 'basename' ] . $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'MARKDOWN_EXTENSION' ] ) ) );
+
+            /*
+             * Add /content/about.md
+              [1] => C:/wamp/www/example.com/content/about.md
+             */
+
+            $default_files[] = ( $this->file_getRealPath( $this->file_joinPaths( $this->CONTENT_ROOT, $file_info[ 'dirname' ], $file_info[ 'basename' ] . $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'MARKDOWN_EXTENSION' ] ) ) );
+
+
+            /*
+             * Add the configued INDEX_FILES to the search list
+             * 
+              [2] => C:/wamp/www/example.com/content/about/index.php
+              [3] => C:/wamp/www/example.com/content/about/index.html
+              [4] => C:/wamp/www/example.com/content/about/index.html
+              [5] => C:/wamp/www/example.com/content/about/index.md
+             */
+
+
+            $default_basenames = $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'INDEX_FILES' ];
+
+            /*
+             * Add the configured default files to the list of files we're looking for.
+             */
+            foreach ( $default_basenames as $key => $default_file_name ) {
+                $default_files[] = ( $this->file_getRealPath( $this->file_joinPaths( $this->CONTENT_ROOT, $url_info[ 'path' ], $default_file_name ) ));
+}
+
+
+            /*
+             * Filter array for empty elements
+             * Elements would be null if file_getRealPath found they didn't exist
+             */
+
+            $default_files = array_filter( $default_files );
+
+
+
+            if ( empty( $default_files ) ){ //if array is empty, set it to false so we get a 404
+                $file[ 'path' ] = false;
+            } else {
+                $file[ 'path' ] = array_shift( $default_files ); //get the file with the highest  precedence
+
+
+                $file_info = pathinfo( $file[ 'path' ] );
+
+
+                //    $file[ 'path' ] = $this->file_getRealPath( ($this->file_joinPaths( $this->CONTENT_ROOT, $this->addTrailingSlash( $url_info[ 'path' ] ) ) . "index.md" ) );
+                $file[ 'extension' ] = $file_info[ 'extension' ];
+            }
+
+
+
+
+
+        }
+
+
+
+        $result[ 'url' ] = $url;
+        $result[ 'file_path' ] = ($file[ 'path' ] !== false ) ? $file[ 'path' ] : null;
+        $result[ 'file_exists' ] = ($file[ 'path' ] !== false ) ? true : false;
+        $result[ 'file_extension' ] = isset( $file[ 'extension' ] ) ? $file[ 'extension' ] : null;
+        $result[ 'query' ] = isset( $url_info[ 'query' ] ) ? $url_info[ 'query' ] : null;
+        $result[ 'query_vars' ] = isset( $query_vars ) ? $query_vars : array();
+
+
+
+
+
+
+
+        return $result;
+    }
+
+    /**
+     * Get File From Url
+     *
+     * Returns a file based on order or precedence
+     * @deprecated
+     * @see getFileFromUrl
+     * @param $url string The requested url
+     * @return mixed The path to the file or false if it could not be found
+     */
+    public function getFileFromUrl_v1( $url ) {
+
+
+
+        /*
+         * Capture the url's parts
+         */
+
+        $url_info = (parse_url( $url ));
+        $file_info = pathinfo( $url_info[ 'path' ] );
+
+
+
+        /*
+         * Add Trailing Slash
+         * If not a file.
+         * This allows /about and /about/ to both return /about/index.md, /about.md ,etc.
+         */
+        if ( !isset( $file_info[ 'extension' ] ) ) {
+            $url_info[ 'path' ] = $this->addTrailingSlash( $url_info[ 'path' ] );
+
+            $url = $url_info[ 'path' ];
+        }
+
+
+        /*
+         * Add a Content Tag for Each Query Variable so We can add their values as content tags if we want
          */
         if ( isset( $url_info[ 'query' ] ) ){
             parse_str( $url_info[ 'query' ], $query_vars );
@@ -855,11 +1653,7 @@ class DowncastBase   {
           )
 
 
-          echo '<pre>';
-          print_r( $url_info );
 
-          print_r( $file_info );
-          echo '</pre>';
 
          */
         /*
@@ -873,44 +1667,74 @@ class DowncastBase   {
          * 
          */
 
-
         /*
          * If the url includes a file extension, use that file
          */
         if ( isset( $file_info[ 'extension' ] ) ){
             $file[ 'extension' ] = $file_info[ 'extension' ];
-            $file[ 'path' ] = realpath( ($this->joinPaths( $this->CONTENT_ROOT, $url_info[ 'path' ] ) ) );
+            $file[ 'path' ] = $this->file_getRealPath( ($this->file_joinPaths( $this->CONTENT_ROOT, $url_info[ 'path' ] ) ) );
 } else //otherwise, if it ends in a slash, assume you want to serve index.md
         {
 
             /*
              *  Get File From URL
              * If URL Ends in Slash
-             *  Look for a file in order of predence
+             *  Look for a file in order of precedence
+              Example: http://example.com/about/
+              (
+              [0] => C:/wamp/www/example.com/about.md
+              [1] => C:/wamp/www/example.com/content/about.md
+              [2] => C:/wamp/www/example.com/content/about/index.php
+              [3] => C:/wamp/www/example.com/content/about/index.html
+              [4] => C:/wamp/www/example.com/content/about/index.html
+              [5] => C:/wamp/www/example.com/content/about/index.md
+              )
              * This 
              * This array will be a number of possible files that will
              */
 
 
-            if ( isset( $file_info[ 'extension' ] ) ){
-                $default_files[] = ( realpath( $this->joinPaths( $this->CONTENT_ROOT, $file_info[ 'dirname' ], $file_info[ 'basename' ] ) ) );
+            /*
+             * Add /about.md
+             * 
+              [0] => C:/wamp/www/example.com/about.md
+
+             */
+            $default_files[] = ( $this->file_getRealPath( $this->file_joinPaths( $file_info[ 'dirname' ], $file_info[ 'basename' ] . $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'MARKDOWN_EXTENSION' ] ) ) );
+
+            /*
+             * Add /content/about.md
+              [1] => C:/wamp/www/example.com/content/about.md
+             */
+
+            $default_files[] = ( $this->file_getRealPath( $this->file_joinPaths( $this->CONTENT_ROOT, $file_info[ 'dirname' ], $file_info[ 'basename' ] . $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'MARKDOWN_EXTENSION' ] ) ) );
+
+
+            /*
+             * Add the configued INDEX_FILES to the search list
+             * 
+              [2] => C:/wamp/www/example.com/content/about/index.php
+              [3] => C:/wamp/www/example.com/content/about/index.html
+              [4] => C:/wamp/www/example.com/content/about/index.html
+              [5] => C:/wamp/www/example.com/content/about/index.md
+             */
+
+
+            $default_basenames = $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'INDEX_FILES' ];
+
+            /*
+             * Add the configured default files to the list of files we're looking for.
+             */
+            foreach ( $default_basenames as $key => $default_file_name ) {
+                $default_files[] = ( $this->file_getRealPath( $this->file_joinPaths( $this->CONTENT_ROOT, $url_info[ 'path' ], $default_file_name ) ));
 }
 
 
+            /*
+             * Filter array for empty elements
+             * Elements would be null if file_getRealPath found they didn't exist
+             */
 
-
-            $default_files[] = ( realpath( $this->joinPaths( $this->CONTENT_ROOT, $file_info[ 'dirname' ], $file_info[ 'filename' ] . $this->MARKDOWN_EXTENSION ) ) );
-//realpath
-
-
-
-
-            $default_basenames = $this->INDEX_FILES;
-
-
-            foreach ( $default_basenames as $key => $value ) {
-                $default_files[] = ( realpath( $this->joinPaths( $this->CONTENT_ROOT, $url_info[ 'path' ] . $value ) ));
-}
             $default_files = array_filter( $default_files );
 
 
@@ -918,15 +1742,16 @@ class DowncastBase   {
             if ( empty( $default_files ) ){ //if array is empty, set it to false so we get a 404
                 $file[ 'path' ] = false;
             } else {
-                $file[ 'path' ] = realpath( array_shift( $default_files ) ); //get the file with the highest  precedence
+                $file[ 'path' ] = array_shift( $default_files ); //get the file with the highest  precedence
 
 
                 $file_info = pathinfo( $file[ 'path' ] );
 
 
-                //    $file[ 'path' ] = realpath( ($this->joinPaths( $this->CONTENT_ROOT, $this->addTrailingSlash( $url_info[ 'path' ] ) ) . "index.md" ) );
+                //    $file[ 'path' ] = $this->file_getRealPath( ($this->file_joinPaths( $this->CONTENT_ROOT, $this->addTrailingSlash( $url_info[ 'path' ] ) ) . "index.md" ) );
                 $file[ 'extension' ] = $file_info[ 'extension' ];
             }
+
 
 
 
@@ -943,8 +1768,11 @@ class DowncastBase   {
         $this->_page_info[ 'file_extension' ] = isset( $file[ 'extension' ] ) ? $file[ 'extension' ] : null;
         $this->_page_info[ 'query' ] = isset( $url_info[ 'query' ] ) ? $url_info[ 'query' ] : null;
         $this->_page_info[ 'query_vars' ] = isset( $query_vars ) ? $query_vars : array();
-      
 
+        /*
+         * Earliest that $url can be determined correctly
+         */
+        $this->doActionHooks( 'dc_page_info' );
 
 
         return $file;
@@ -983,12 +1811,13 @@ class DowncastBase   {
 
 
         if ( isset( $this->_tag_filters[ $tagname ] ) ) {
+
+
             foreach ( $this->_tag_filters[ $tagname ] as $key => $callback ) {
 
                 if ( is_callable( $callback ) ) {
 
-
-                    $content = call_user_func( $callback, $tagname,$content );
+                    $content = call_user_func( $callback, $tagname, $content );
 
 
 }
@@ -1088,7 +1917,7 @@ class DowncastBase   {
      * @return void
      */
 
-    public function addPlugin( $plugin_name ) {
+    private function _addPlugin( $plugin_name ) {
 
 
         if ( !isset( $this->_plugins[ $plugin_name ] ) ) {
@@ -1155,7 +1984,7 @@ class DowncastBase   {
     public function doActionHooks( $hook_name, $args = array() ) {
 
 
-
+        $this->debugLog( 'doActionHooks(' . $hook_name . ')', '', __FUNCTION__, false );
 
         if ( isset( $this->_action_hooks[ $hook_name ] ) ) {
             foreach ( $this->_action_hooks[ $hook_name ] as $key => $callback ) {
@@ -1182,12 +2011,1175 @@ class DowncastBase   {
      * @return void
      */
     public function addActionHook( $hook_name, $callback ) {
-
+        $this->debugLog( 'addActionHook(' . $hook_name . ')', '', __FUNCTION__, false );
         $this->_action_hooks[ $hook_name ][] = $callback;
 
 
     }
 
+    private $_root_directory = null;
+
+    /**
+     * Set Root Directory
+     *
+     * Sets the Root Directory Path
+     *
+     * @param none
+     * @return void
+     */
+    public function setRootDirectory( $path ) {
+
+        $this->_root_directory = $path;
+
+        }
+
+    /**
+     * Get Root Directory Path (**Not** Content Root)
+     *
+     * Returns the base directory path of the DownCast root directory (**NOT content root!)
+     * @param none
+     * @return string The path to the root directory
+     */
+    public function getRootDirectory() {
+        return $this->file_convertToForwardSlashes( $this->_root_directory );
+
+    }
+
+    /**
+     * Add Missing Site Config
+     *
+     * Provide Defaults for values that if missing, e.g. in the event the main site's config file is deleted, would break the site.
+     * Do not provide defaults for tags or info, since it may be intentional that
+     * they were left blank.
+     * Usage:
+     * 
+     * 
+     * 
+     * @param $array_config
+     * @return array The site's configuration array, with missing configuration added back in.
+     */
+    private function _addMissingSiteConfig( $array_config ) {
+
+
+
+
+        $defaults = '
+           {"SITE":
+            {
+                "INFO":
+                        {
+                        },
+                "CONFIG":
+                        {    
+                        
+                            "CONTENT_ROOT": "content",
+                            "SKIN": [
+                                "/bootstrap/2.3.2/superhero",
+                                "/highlightjs/8.3"
+
+                            ],
+                            "PLUGINS": [
+                            ],
+                            "TEMPLATE": "fluid",
+                            "SKIN_BASE_DIRECTORY": "/skins/",
+                            "TEMPLATE_BASE_DIRECTORY": "/templates/", 
+                            "TEMPLATE_FILE_NAME": "index.php", 
+                            
+                            "SAFE_PARSE": true,
+                           
+                            "MARKDOWN_EXTENSION": ".md",
+                            "INDEX_FILES": [
+                                "index.php",
+                                "index.html",
+                                "index.html",
+                                "index.md"
+                            ],
+                            "CSS_INLINE_ENABLED": false,
+                            "JS_INLINE_ENABLED": false
+                            
+                        },
+                "EMBED_TAGS": {
+                },
+                "CONTENT_TAGS": {
+                }
+            }
+}  
+
+';
+
+        $defaults_config = json_decode( $defaults, true );
+
+        foreach ( $defaults_config[ 'SITE' ][ 'CONFIG' ] as $key => $value ) {
+            if ( !isset( $array_config[ 'SITE' ][ 'CONFIG' ][ $key ] ) ){
+                $array_config[ 'SITE' ][ 'CONFIG' ][ $key ] = $defaults_config[ 'SITE' ][ 'CONFIG' ][ $key ];
+
+            }
+}
+        return $array_config;
+    }
+
+    /**
+     * Load Site Configuration
+     *
+     * Reads Configuration Files into the $this->SITE property
+     *
+     * @param none
+     * @return void
+     */
+    private function _loadSiteConfigFile() {
+
+        $this->doActionHooks( 'dc_site_config' );
+        if ( $this->readConfigFile( $this->SITE_CONFIG_FILE_PATH ) === false ){
+
+            $error_title = "Unable to start. Missing Configuration file " . $this->SITE_CONFIG_FILE_PATH . "'";
+            $error_details = 'If you\'ve relocated it, update its location by editing the config() method in /lib/downcast/Downcast.php and updating $this->SITE_CONFIG_FILE_PATH' . ' Or you may replace the file with a fresh download from GetDownCast.com';
+
+            $this->debugLogError( $error_title, $error_details );
+
+            exit(); //exit script
+
+}
+
+    }
+
+    /**
+     * Load Template Configuration
+     *
+     * Reads Configuration Files into the $this->SITE property
+     *
+     * @param none
+     * @return void
+     */
+    private function _loadTemplateConfigFile() {
+        /*
+         *  Add Template Configuration 
+         */
+
+
+        $this->doActionHooks( 'dc_template_config' );
+        $this->readConfigFile( $this->file_joinPaths( $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE_BASE_DIRECTORY' ], strtolower( $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE' ] ), "/config.json" ) );
+
+    }
+
+    /**
+     * Load Skin Configuration
+     *
+     * Reads Configuration Files into the $this->SITE property
+     *
+     * @param none
+     * @return void
+     */
+    private function _loadSkinConfigFile() {
+
+        /*
+         *  Add Skin Configuration
+         * Check first if its an array or string
+         */
+
+        /*
+         * Override setting skin setting here
+         */
+        $this->doActionHooks( 'dc_skin_config' );
+
+        if ( !is_array( $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKIN' ] ) ) {
+            $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKIN' ] = array( $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKIN' ] );
+}
+
+
+
+        $array_skin_directories = $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKIN' ];
+
+
+
+
+        foreach ( $array_skin_directories as $skin_directory ) {
+
+
+
+            $skin_path = $this->file_joinPaths( $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKIN_BASE_DIRECTORY' ], strtolower( $skin_directory ), "/config.json" );
+
+
+
+            $this->readConfigFile( $skin_path );
+}
+
+
+
+
+
+
+
+
+}
+
+    /**
+     * Load Plugins ( internal ) 
+     *
+     * Instantiates Each Plugin and Assigns to a Tracking Array in $this
+     *
+     * @param none
+     * @return void
+     */
+    private function _loadPlugins() {
+
+        $plugins = $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'PLUGINS' ];
+        $load_failed = false;
+        foreach ( $plugins as $key => $plugin_unique_id ) {
+            if ( !isset( $this->_plugins[ $plugin_unique_id ] ) ) {
+
+                $plugin_file_path = $this->file_joinPaths( "plugins/", $plugin_unique_id, $plugin_unique_id . ".php" );
+                $plugin_configuration_file = $this->file_joinPaths( "plugins/", $plugin_unique_id, "config.json" );
+                if ( (!file_exists( $plugin_file_path )) || (!file_exists( $plugin_configuration_file )) ) {
+                    $load_failed = true;
+            }
+
+                @include_once($plugin_file_path);
+
+                if ( !class_exists( $plugin_unique_id ) ) {
+                    $load_failed = true;
+
+
+                    }
+
+                if ( $load_failed ){
+
+
+                    $error_title = "Plugin $plugin_unique_id failed to load";
+                    $error_details = "The class, parent directory name, and/or plugin class file name do not match, or you are missing the plugin class file or configuration. Please see DownCast Documentation for more information";
+
+                    $this->debugLogError( $error_title, $error_details );
+
+                    $load_failed = false; //reset for next plugin load
+                    } else {
+                    $this->_plugins[ $plugin_unique_id ] = new $plugin_unique_id( $this ); //instantiate the plugin object and assign to $this->_plugins
+                    }
+
+
+}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+    /**
+     * Short Description
+     *
+     * Long Description
+     *
+     * @param none
+     * @return void
+     */
+    public function addSiteTags() {
+        
+    }
+
+    /**
+     * Initialize Plugins
+     *
+     * Calls the _plugin_init method of each loaded plugin
+     *
+     * @param none
+     * @return void
+     */
+    private function _initPlugins() {
+        /*
+         * If no plugins,return
+         */
+        if ( !isset( $this->CONFIG[ 'PLUGIN' ] ) ) {
+            return;
+}
+        $plugins = $this->CONFIG[ 'PLUGIN' ];
+        foreach ( $plugins as $plugin_id => $plugin_config_array ) {
+            $this->_plugins[ $plugin_id ]->_plugin_init();
+}
+    }
+
+    /**
+     * Add Content Tags
+     *
+     * Adds Content Tags
+     * @deprecated
+     * @param none
+     * @return void
+     */
+    private function addEmbedTagsOLD() {
+
+
+
+        /*
+         * Site Tags
+         */
+        $site_embed_tags = $this->CONFIG[ 'SITE' ][ 'EMBED_TAGS' ];
+        $site_content_tags = $this->CONFIG[ 'SITE' ][ 'CONTENT_TAGS' ];
+
+
+        /*
+         * Add SITE EMBED_TAGS
+         */
+
+
+        foreach ( $site_embed_tags as $tag_name => $tag_content ) {
+            $this->addEmbedTag( $tag_name, $tag_content );
+}
+
+
+        /*
+         * Add SITE CONTENT_TAGS
+         */
+        foreach ( $site_content_tags as $tag_name => $tag_content ) {
+            $this->addContentTag( $tag_name, $tag_content );
+}
+
+        /*
+         * Convert Site INFO Tags into Content Tags
+         */
+
+        $info_tags = $this->CONFIG[ 'SITE' ][ 'INFO' ];
+
+
+
+
+
+
+
+        foreach ( $info_tags as $tag_name => $tag_content ) {
+            $this->addContentTag( 'SITE_' . $tag_name, $tag_content );
+}
+
+
+
+        /*
+         * Add Template Tags
+         */
+        $template_embed_tags = $this->CONFIG[ 'TEMPLATE' ][ 'EMBED_TAGS' ];
+        $template_content_tags = $this->CONFIG[ 'TEMPLATE' ][ 'CONTENT_TAGS' ];
+        /*
+         * Add Template EMBED_TAGS
+         */
+        /*
+         * force array to prevent foreach errors
+         */
+        $template_embed_tags = ( is_array( $template_embed_tags )) ? $template_embed_tags : array();
+
+
+        foreach ( $template_embed_tags as $tag_name => $tag_content ) {
+            $this->addEmbedTag( $tag_name, $tag_content );
+}
+        /*
+         * Add Template CONTENT_TAGS
+         */
+        /*
+         * force array to prevent foreach errors
+         */
+        $template_content_tags = ( is_array( $template_content_tags )) ? $template_content_tags : array();
+        foreach ( $template_content_tags as $tag_name => $tag_content ) {
+            $this->addContentTag( $tag_name, $tag_content );
+}
+
+        $this->debugLog( '$this->CONTENT_TAGS = ', $this->CONTENT_TAGS, true, false );
+}
+
+    /**
+     * Add Content Tags
+     *
+     * Adds Content Tags contained within an associative input array
+     *
+     * @param none
+     * @return void
+     */
+    public function addContentTags( $tags, $prefix = '' ) {
+
+        /*
+         * force array to prevent foreach errors
+         */
+        $tags = ( is_array( $tags )) ? $tags : array();
+        foreach ( $tags as $tag_name => $tag_content ) {
+            $this->addContentTag( $prefix . $tag_name, $tag_content );
+}
+
+
+}
+
+    /**
+     * Add Embed Tags
+     *
+     * Adds Embed Tags contained within an associative input array
+     *
+     * @param $tags array An array of tag names and tag values consisting of the path to the file to be read
+     * @return void
+     */
+    public function addEmbedTags( $tags) {
+
+        /*
+         * force array to prevent foreach errors
+         */
+        $tags = ( is_array( $tags )) ? $tags : array();
+        foreach ( $tags as $tag_name => $url_path ) {
+            $this->addEmbedTag( $tag_name, $url_path );
+}
+
+
+}
+
+    /**
+     * Add Skin CSS and Javascript
+     *
+     * Returns Skin's CSS and Javascript as HTML LINK tags
+     *
+     * @param none
+     * @return void
+     */
+    private function _getSkinCssAndJs() {
+        /*
+         * Initialize
+         */
+
+        $js_links = '';
+        $js_inline = '';
+        $css_links = '';
+        $css_inline = '';
+        $result[ 'js_inline' ] = '';
+        $result[ 'js_links' ] = '';
+        $result[ 'css_inline' ] = '';
+        $result[ 'css_links' ] = '';
+        /*
+         * Find Skin Array
+         */
+        if ( isset( $this->CONFIG[ 'SKIN' ] ) ) {
+            $array_skin = $this->CONFIG[ 'SKIN' ];
+} else {
+            /*
+             * return empty strings if no SKIN loaded
+             */
+            return $result;
+}
+
+
+
+        /*
+         * Force it to be an array to avoid errors when passed a string
+         */
+        if ( !is_array( $array_skin ) ) {
+            $array_skin = array( $array_skin );
+}
+        /*
+         * Iterate through each skin and concatenate their css paths
+         */
+        foreach ( $array_skin as $skin_relative_path => $skin ) {
+
+
+            $resource_array = (isset( $skin[ 'CONFIG' ][ 'CSS' ] )) ? $skin[ 'CONFIG' ][ 'CSS' ] : array();
+            $css_links .=$this->_implodeResourceArray(
+                    $skin_relative_path, //The relative path from Downcast root to the resource directory
+                    $resource_array, //The array containing the names of the resource files
+                    true, //$css True if the resource is css, false if script
+                    false //$inline True for inline, false to return as resource links                      
+            );
+
+            $resource_array = (isset( $skin[ 'CONFIG' ][ 'CSS_INLINE' ] )) ? $skin[ 'CONFIG' ][ 'CSS_INLINE' ] : array();
+
+
+            $css_inline .=$this->_implodeResourceArray(
+                    $skin_relative_path, //The relative path from Downcast root to the resource directory
+                    $resource_array, //The array containing the names of the resource files
+                    true, //$css True if the resource is css, false if script
+                    $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'CSS_INLINE_ENABLED' ] //$inline True for inline, false to return as resource links 
+            );
+
+            $resource_array = (isset( $skin[ 'CONFIG' ][ 'JS' ] )) ? $skin[ 'CONFIG' ][ 'JS' ] : array();
+
+            $js_links .=$this->_implodeResourceArray(
+                    $skin_relative_path, //The relative path from Downcast root to the resource directory
+                    $resource_array, //The array containing the names of the resource files
+                    false, //$css True if the resource is css, false if script
+                    false //$inline True for inline, false to return as resource links 
+            );
+
+
+            $resource_array = (isset( $skin[ 'CONFIG' ][ 'JS_INLINE' ] )) ? $skin[ 'CONFIG' ][ 'JS_INLINE' ] : array();
+
+            $js_inline .=$this->_implodeResourceArray(
+                    $skin_relative_path, //The relative path from Downcast root to the resource directory
+                    $resource_array, //The array containing the names of the resource files
+                    false, //$css True if the resource is css, false if script
+                    $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'JS_INLINE_ENABLED' ]  //$inline True for inline, false to return as resource links 
+            );
+
+
+
+
+}//end SKINs Loop
+
+
+
+
+        $result[ 'css_links' ] = $css_links;
+        $result[ 'css_inline' ] = $css_inline;
+
+        $result[ 'js_links' ] = $js_links;
+        $result[ 'js_inline' ] = $js_inline;
+
+
+        return $result;
+    }
+
+    /**
+     * Add Plugin CSS and Javascript
+     *
+     * Returns Plugin's CSS and Javascript as HTML LINK tags
+     *
+     * @param none
+     * @return void
+     */
+    private function _getPluginCssAndJs() {
+        /*
+         * Initialize
+         */
+
+        $js_links = '';
+        $js_inline = '';
+        $css_links = '';
+        $css_inline = '';
+        $result[ 'js_inline' ] = '';
+        $result[ 'js_links' ] = '';
+        $result[ 'css_inline' ] = '';
+        $result[ 'css_links' ] = '';
+        /*
+         * Find Skin Array
+         */
+        if ( isset( $this->CONFIG[ 'PLUGIN' ] ) ) {
+            $array_plugin = $this->CONFIG[ 'PLUGIN' ];
+} else {
+            /*
+             * return empty strings if no SKIN loaded
+             */
+            return $result;
+}
+
+
+
+
+        /*
+         * Force it to be an array to avoid errors when passed a string
+         */
+        if ( !is_array( $array_plugin ) ) {
+            $array_plugin = array( $array_plugin );
+}
+        /*
+         * Iterate through each plugin and concatenate their css paths
+         */
+        foreach ( $array_plugin as $_plugin_relative_path => $plugin ) {
+
+            $plugin_relative_path = "/plugins/" . $_plugin_relative_path;
+
+
+
+            $resource_array = (isset( $plugin[ 'CONFIG' ][ 'CSS' ] )) ? $plugin[ 'CONFIG' ][ 'CSS' ] : array();
+            $css_links .=$this->_implodeResourceArray(
+                    $plugin_relative_path, //The relative path from Downcast root to the resource directory
+                    $resource_array, //The array containing the names of the resource files
+                    true, //$css True if the resource is css, false if script
+                    false //$inline True for inline, false to return as resource links                      
+            );
+
+
+
+
+
+            $resource_array = (isset( $plugin[ 'CONFIG' ][ 'CSS_INLINE' ] )) ? $plugin[ 'CONFIG' ][ 'CSS_INLINE' ] : array();
+
+
+            $css_inline .=$this->_implodeResourceArray(
+                    $plugin_relative_path, //The relative path from Downcast root to the resource directory
+                    $resource_array, //The array containing the names of the resource files
+                    true, //$css True if the resource is css, false if script
+                    $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'CSS_INLINE_ENABLED' ] //$inline True for inline, false to return as resource links 
+            );
+
+            $resource_array = (isset( $plugin[ 'CONFIG' ][ 'JS' ] )) ? $plugin[ 'CONFIG' ][ 'JS' ] : array();
+
+            $js_links .=$this->_implodeResourceArray(
+                    $plugin_relative_path, //The relative path from Downcast root to the resource directory
+                    $resource_array, //The array containing the names of the resource files
+                    false, //$css True if the resource is css, false if script
+                    false //$inline True for inline, false to return as resource links 
+            );
+
+
+            $resource_array = (isset( $plugin[ 'CONFIG' ][ 'JS_INLINE' ] )) ? $plugin[ 'CONFIG' ][ 'JS_INLINE' ] : array();
+
+            $js_inline .=$this->_implodeResourceArray(
+                    $plugin_relative_path, //The relative path from Downcast root to the resource directory
+                    $resource_array, //The array containing the names of the resource files
+                    false, //$css True if the resource is css, false if script
+                    $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'JS_INLINE_ENABLED' ]  //$inline True for inline, false to return as resource links 
+            );
+
+
+
+
+}//end SKINs Loop
+
+
+
+
+        $result[ 'css_links' ] = $css_links;
+        $result[ 'css_inline' ] = $css_inline;
+
+        $result[ 'js_links' ] = $js_links;
+        $result[ 'js_inline' ] = $js_inline;
+
+        return $result;
+    }
+
+    /**
+     * Get Plugin CSS and Javascript
+     *
+     * Returns Plugins' CSS and Javascript as HTML LINK tags
+     * @deprecated
+     * @param none
+     * @return void
+     */
+    private function _getPluginCssAndJsOLD2() {
+        /*
+         * Initialize
+         */
+        $css = '';
+        $js = '';
+        $result[ 'css' ] = $css;
+        $result[ 'js' ] = $js;
+        $this->debugLog( '$this->CONFIG = ', $this->CONFIG, true, true );
+
+        /*
+         * Find Plugin Array
+         */
+        if ( isset( $this->CONFIG[ 'PLUGIN' ] ) ) {
+            $array_plugins = $this->CONFIG[ 'PLUGIN' ];
+} else {
+            /*
+             * return empty strings if no SKIN loaded
+             */
+            return $result;
+}
+
+
+
+        /*
+         * Iterate through each Plugin and concatenate their css paths
+         */
+        foreach ( $array_plugins as $plugin_id => $plugin ) {
+
+            $plugin_relative_path = "plugins/$plugin_id";
+            if ( isset( $plugin[ 'CONFIG' ][ 'CSS' ] ) ){
+                $plugin_css_array = $plugin[ 'CONFIG' ][ 'CSS' ];
+                if ( !is_array( $plugin_css_array ) ) {
+                    $plugin_css_array = array( $plugin_css_array );
+}
+
+
+                foreach ( $plugin_css_array as $css_key => $css_path ) {
+
+                    $link = $this->file_convertToForwardSlashes( $this->file_joinPaths( $plugin_relative_path, $css_path ) );
+
+                    $css .="\n<link href=\"$link\" rel=\"stylesheet\">";
+
+
+}
+
+               }
+
+
+            /*
+             * Javascript
+             */
+            if ( isset( $plugin[ 'CONFIG' ][ 'JS' ] ) ){
+                $plugin_js_array = $plugin[ 'CONFIG' ][ 'JS' ];
+                if ( !is_array( $plugin_js_array ) ) {
+                    $plugin_js_array = array( $plugin_js_array );
+}
+
+                /*
+                 * Iterate through JS Array
+                 */
+
+                foreach ( $plugin_js_array as $js_key => $js_path ) {
+
+                    $link = $this->file_convertToForwardSlashes( $this->file_joinPaths( $plugin_relative_path, $js_path ) );
+                    $js .="\n<script src=\"$link\"></script>";
+
+
+}
+        }
+
+        }
+
+        $result[ 'css' ] = $css;
+        $result[ 'js' ] = $js;
+
+
+
+
+
+
+
+        return $result;
+       }
+
+    /**
+     * Add Css and Script Tags
+     *
+     * Adds Content Tags {CSS} and {JS} based on Skin and Plugin Configuration
+     *
+     * @param none
+     * @return void
+     */
+    private function _addCssAndJsTags() {
+
+        /*
+         * Initialize
+         */
+        $css_links = '';
+        $css_inline = '';
+        $js_links = '';
+        $js_inline = '';
+
+
+        /*
+         * Get the Skin's CSS and Scripts
+         */
+
+        $this->doActionHooks( 'dc_skin_resources' );
+        $skin_links = $this->_getSkinCssAndJs();
+
+        $css_links .=$skin_links[ 'css_links' ];
+        $css_inline .=$skin_links[ 'css_inline' ];
+        $js_links .=$skin_links[ 'js_links' ];
+        $js_inline .=$skin_links[ 'js_inline' ];
+
+        /*
+         * Get the Plugin CSS and Scripts
+         */
+
+        $plugin_links = $this->_getPluginCssAndJs();
+
+        $css_links .=$plugin_links[ 'css_links' ];
+        $css_inline .=$plugin_links[ 'css_inline' ];
+        $js_links .=$plugin_links[ 'js_links' ];
+        $js_inline .=$plugin_links[ 'js_inline' ];
+
+
+
+
+
+        $css_tag_content = $css_links . $css_inline;
+        $js_tag_content = $js_links . ($js_inline); //encode is necessary to escape javascript
+        $js_tag_content_encoded = $js_links . $js_inline; //encode is necessary to escape javascript
+        //  echo ($js_tag_content_encoded);
+        // $this->debugLog( 'stop = ', stop, true, true );
+//        $this->debugLog( '$js_tag_content = ', $js_tag_content, true, true );
+
+        $this->addContentTag( 'CSS', $css_tag_content );
+        $this->addContentTag( 'JS', $js_tag_content );
+
+
+
+
+
+    }
+
+    /**
+     * Log Error Message
+     *
+     * Logs Error Message to Log File or to screen
+     * This should be reserved for user type errors, not for development debugging.
+     *
+     * @param none
+     * @return void
+     */
+    public function debugLogError( $_error_title, $_error_details ) {
+        if ( !$this->DEBUG ) {
+            return;
+}
+
+        if ( $this->DEBUG_LOG_TO_FILE ) {
+            $log_file_message = date( "F j, Y, g:i a" ) . ' ' . $_error_title . ' ' . $_error_details . "\n";
+            error_log( $log_file_message, 3, $this->DEBUG_FILE );
+}
+
+
+        $html_error_title = '<strong>' . $this->STRING_DEBUG_LABEL . ' ' . $_error_title . '</strong>';
+        $html_error_details = '<span>' . $_error_details . '</span>';
+        $html_message = '<p>' . $html_error_title . ' ' . $html_error_details . '</p>';
+
+        if ( $this->DEBUG_SHOW_ERRORS ) { //0 - log, 1, screen , 2 log and show
+            echo $html_message;
+}
+
+
+    }
+
+    private $_debug_filters = null;
+
+    /**
+     * Debug Add Filter
+     *
+     * Add Debug Filter
+     *
+     * @param $filter string A unique string that will be used to filter debug message requests
+     * @return void
+     */
+    public function debugAddFilter( $filter ) {
+
+        $this->_debug_filters[] = $filter;
+    }
+
+    /**
+     * Debug Log
+     *
+     * Prints out debug text if its in the filter
+     *
+     * @param $text string Text to be displayed
+     * @param $var mixed The variable to be displayed
+     * @param $filter mixed A boolean or a unique string that if in allowed_filters permits the text to be displayed
+     * @return void
+     */
+    public function debugLog( $text, $var, $filter = true, $stop = false ) {
+
+        /*
+         * Don't process is DEBUG is turned off
+         */
+        if ( !$this->DEBUG ) {
+            return;
+}
+        /*
+         * Get Backtrace data
+         * 
+         * 
+         */
+        $debug_array = debug_backtrace();
+        $line = $debug_array[ 0 ][ 'line' ];
+        $file = $debug_array[ 0 ][ 'file' ];
+        $function = $debug_array[ 1 ][ 'function' ];
+        $class = $debug_array[ 1 ][ 'class' ];
+
+        $line = is_null( $line ) ? "" : "($line)";
+
+
+        /*
+         * Check if filters is a boolean or text
+         * If boolean, return if false
+         * If not boolean, check if the filter string is in the filters array
+         */
+        if ( !is_array( $this->_debug_filters ) ){ $this->_debug_filters = array( $this->_debug_filters ); }
+
+        if ( is_bool( $filter ) ) {
+            if ( !$filter ){ return; }//if turned off, return
+            $debug = $filter;
+
+} else {
+            $debug = in_array( $filter, $this->_debug_filters );
+}
+
+        /*
+         * If debug call is turned off or not in filters, return
+         */
+        if ( !$debug ){
+            return;
+            }
+
+        /*
+         * Finally, display message or stop if appropriate
+         */
+
+        if ( is_array( $var ) ){
+            echo "<br><strong style=\"color:green\"> Debug:$line/$class/$function()</strong><pre>" . $text, htmlspecialchars( print_r( $var, true ) ), '</pre>';
+} else {
+
+            echo "<br><strong style=\"color:green\"> Debug:$line/$class/$function()</strong><pre>" . $text . ' ' . htmlspecialchars( $var ) . '</pre>';
+}
+
+
+
+
+        if ( $stop ) {
+            /*
+             * Add Backtrace
+             * Grab the nice ouput of debug_print_backtrace using
+             * output buffering, 
+             * then use regex to remove the first part since its the debug function call that we alread have
+             */
+            ob_start();
+            debug_print_backtrace();
+            $backtrace = htmlspecialchars( ob_get_clean() );
+
+
+
+            $pattern = '/#0(?:(?!#1).)*/ims';
+            $replacement = '';
+            $backtrace = preg_replace( $pattern, $replacement, $backtrace );
+
+
+
+            echo '<br><div style="color:brown;"><pre>########   BACKTRACE ########<br>', $backtrace, '</pre</div>';
+            die( "<br>Exited for debug $line " . $file );
+
+
+    }
+
+
+}
+
+    /**
+     * is Same Directory ( File Library )
+     *
+     * Normalizes and Compares 2 directory paths.
+     *
+     * @param $_path1  - The path to the first directory
+     * @param $_path2  - The path to the second directory
+     * 
+     * @return bool True if same, false if different
+     */
+    public function file_isSameDirectory( $_path1, $_path2 ) {
+
+        $path1 = $this->addTrailingSlash( $this->file_convertToForwardSlashes( trim( $_path1 ) ) );
+        $path2 = $this->addTrailingSlash( $this->file_convertToForwardSlashes( trim( $_path2 ) ) );
+
+        return ($path1 === $path2);
+
+
+    }
+
+    /**
+     * Convert to Forward Slashes  ( File Library )
+     *
+     * Useful for Relative URL Paths and to normalize paths.
+     *
+     * @param $path Path containing backslashes
+     * @return void
+     */
+    public function file_convertToForwardSlashes( $path ) {
+
+        $result = (str_replace( '\\', '/', $path ));
+
+        return $result;
+    }
+
+    /**
+     * Get Real Path ( File Library)
+     *
+     * 
+     * Does exactly the same as realpath except  by default it does not resolve symbolic links and ../ type paths
+     * This is for security reasons. If you want to override this, and use realpath, set safe=false;
+     * 
+     * If you need to get a Real Path without checking if file exists, use file_getAbsolutePath
+     * 
+     * 
+     * @param $path The path to the file or directory
+     * @param $safe bool True will not use realpath, false uses realpath. Its unsafe because it will allow an attacker to use ../ and have it resolved to a real file. 
+     * @return void
+     */
+    public function file_getRealPath( $path, $safe = true ) {
+
+        /*
+         * Use realpath only if safe is false.
+         */
+        if ( $safe === true ){
+
+            $abs_file_path = $this->file_joinPaths( $this->getRootDirectory(), $path );
+
+
+
+
+            if ( file_exists( $abs_file_path ) ) {
+
+                $result = $abs_file_path;
+
+} else {
+                $result = false;
+}
+
+   } else {
+
+            $result = realpath( $path );
+
+   }
+        return $result;
+    }
+
+    /**
+     * Get Absolute Path ( File Library)
+     *
+     * 
+     * Simply adds the app's root directory to the path provided. 
+     * It does not resolve ../ or symbolic links.
+     * Does not check if file exists
+     * If you need to check if file exists, use file_getRealPath
+     * 
+     * 
+     * @param $path string The path to the file or directory
+     * @return string The absolute path.
+     */
+    public function file_getAbsolutePath( $path ) {
+
+        $result = $this->file_joinPaths( $this->getRootDirectory(), $path );
+
+        return $result;
+   }
+
+    /**
+     * Implode Resource Array
+     *
+     * Converts a resource array into a string containining inline css or js, or resource links
+     *
+     * 
+     * Usage:
+     * $inline_js=$this->_implodeResourceArray('/js/',$js_inline_array,false,false);
+     * 
+     * @param $resource_relative_path string The relative path from Downcast root to the resource directory containing the resource
+     * @param $resource_array The array containing the names of the resource files
+     * @param $css bool True if the resource is css, false if script
+     * @param $inline bool True if you want the resources returned as inline, false to return as resource links 
+     * @return string A concatenated string containing the resources either as inline <style></style> and <script></script> tags or linked resources
+     */
+    private function _implodeResourceArray( $resource_relative_path, $resource_array, $css = true, $inline = false ) {
+        //initialize
+        $string = '';
+
+        /*
+         * Force array to avoid errors when passed a string
+         */
+        if ( !is_array( $resource_array ) ) {
+            $resource_array = array( $resource_array );
+}
+
+        /*
+         * Iterate Array
+         * 
+         * e.g.:
+         * 0=>"css/bootstrap.min.css"
+         * 1=>"css/bootstrap-responsive.min.css"
+         * 3=>"http://example.com/css/bootstrap-responsive.min.css"
+         */
+
+        foreach ( $resource_array as $key => $path ) {
+
+
+            /*
+             * Check for External URLs and Use Link Form regardleess of $inline setting
+             */
+            if ( preg_match( '/^http/', $path, $matches ) ){
+                if ( $css ) {
+                    $string .="\n<link href=\"$path\" rel=\"stylesheet\">";
+} else {
+                    $string.="\n<script type=\"text/javascript\" src=\"$path\"></script>";
+}
+
+
+} else
+            /*
+             * If Not an external url, check $inline setting and add Inline or Link form depending on setting
+             */
+
+    {
+                $link = $this->addLeadingSlash( $this->file_joinPaths( $resource_relative_path, $path ) );
+                if ( $inline ){
+                    /*
+                     * If Inline, read the file and add to the result string
+                     */
+                    if ( $css ) {
+                        $string.= "\n<style>" . file_get_contents( $this->file_getRealPath( $link ) ) . '</style>';
+  } else {
+                        $string.= "\n<script type=\"text/javascript\" >" . file_get_contents( $this->file_getRealPath( $link ) ) . '</script>';
+  }
+} else {
+                    /*
+                     * 
+                     * If Not Inline and Not External, 
+                     * then just link to it
+                     * 
+
+                     */
+
+
+                    if ( $css ) {
+                        $string .="\n<link href=\"$link\" rel=\"stylesheet\">";
+} else {
+                        $string.="\n<script type=\"text/javascript\" src=\"$link\"></script>";
+
+}
+
+
+
+
+}
+
+    }
+
+}
+        return $string;
+    }
+
+    /**
+     * Debug Hooks
+     *
+     * Displays addActionHook and doActionHooks method calls
+     *
+     * @param none
+     * @return void
+     */
+    public function debugHooks() {
+        $this->debugAddFilter( 'doActionHooks' );
+        $this->debugAddFilter( 'addActionHook' );
+
+    }
+
+    private $_pages = null;
+
+    /**
+     * Add Page
+     *
+     * Maps a Url to a File Path so that it can be displayed by the CONTENT tag when that url is requested
+     *
+     * @param none
+     * @return void
+     */
+    public function addPage( $url, $file_path ) {
+        $this->_pages[ $url ] = $this->file_convertToForwardSlashes( $file_path );
+
+    }
+
+    /**
+     * Get Pages
+     *
+     * Returns an array of file paths mapped to urls
+     * These are pages that were added by plugins or 'virtual' urls added by this class.
+     *
+     * @param none
+     * @return array An array of $pages where the associative index is the url, and the value is the absolute path to the file
+     */
+    private function _getPages() {
+        if ( is_null( $this->_pages ) ) {
+            $this->_pages = array();
+}
+
+
+        return $this->_pages;
+
+    }
 
 }
 

@@ -1,16 +1,24 @@
-<?php 
-	
+<?php
 
-	include("lib/downcast/Downcast.php");
-        include("lib/downcast/DowncastPlugin.php");
-        $io = new Downcast(false);
+include("lib/Downcast/DowncastCacheController.php");
 
+        DowncastCacheController::setup();
+/*
+ * If Cache is enabled, use it
+ */
 
-      $io->doActionHooks('_dc_before_template');
-      
-   
-	$io->renderTemplate("templates/" . strtolower($io->TEMPLATE) ."/index.php");
-$io->doActionHooks('_dc_after_template');
-$io->doActionHooks('_dc_controller_end');
+if ( DowncastCacheController::isEnabled() ){
 
-	?>
+    DowncastCacheController::getPageFromCache();
+
+} else {
+    /*
+     *      
+     * If Cache is Disabled, Get a new page
+     * 
+     */
+
+    DowncastCacheController::getNewPage();
+
+}
+?>

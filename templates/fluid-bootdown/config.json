@@ -1,14 +1,21 @@
-    {
-    "INFO": {
-        "NAME": "Fluid-Bootdown"
-    },
-    "EMBED_TAGS": {
-        "SIDE_BAR": "sidebar.md"
-        ,"NAV_BAR": "navbar.md"     
-    },
-    "CONTENT_TAGS": {
-    }
-}
+{"TEMPLATE":
+            {
+                "INFO":
+                        {
+                            "NAME": "Fluid-Bootdown",
+                            "DESCRIPTION": "Customized for getbootdown.com",
+                            "COMMENT": "",
+                            "VERSION": "1.0"
 
-        
-        
+                        },
+                "CONFIG":
+                        {
+                        },
+                "EMBED_TAGS": {
+                    "SIDE_BAR": "sidebar.md"
+                    , "NAV_BAR": "navbar.md"
+                },
+                "CONTENT_TAGS": {
+                }
+            }
+}

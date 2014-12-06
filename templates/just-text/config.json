@@ -1,14 +1,21 @@
-    {
-    "INFO": {
-        "NAME": "Just Text"
-    },
-    "EMBED_TAGS": {
-        "SIDE_BAR": "sidebar.md"
-        ,"NAV_BAR": "navbar.md"     
-    },
-    "CONTENT_TAGS": {
-    }
-}
+{"TEMPLATE":
+            {
+                "INFO":
+                        {
+                            "NAME": "Just Text",
+                            "DESCRIPTION": "This template contains no HTML markup itself, and no CSS or Javascript, but includes the NAV_BAR, SIDE_BAR, and CONTENT tags and their rendered output.",
+                            "COMMENT": "",
+                            "VERSION": "1.0"
 
-        
-        
+                        },
+                "CONFIG":
+                        {
+                        },
+                "EMBED_TAGS": {
+                    "SIDE_BAR": "sidebar.md"
+                    , "NAV_BAR": "navbar.md"
+                },
+                "CONTENT_TAGS": {
+                }
+            }
+}
