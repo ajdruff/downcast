@@ -13,30 +13,45 @@
                 "CONFIG":
                         {
                             "SKIN": [
-                                "/bootstrap/2.3.2/journal",
+                       
+                                "/highlightjs/8.3"
+                            ],
+                                                        "SKIN_INACTIVE": [
+                                "/bootstrap/2.3.2/superhero",
                                 "/highlightjs/8.3"
 
                             ],
                             "PLUGINS": [
-                                "Skinner"
+                       "ThemeSeattle"
                             ],
                             "PLUGINS_INACTIVE": [
+                                "Skinner",
+                                "SkinDemo",
+                                 "ThemeSeattle",
+                                "ExampleAddContent",
+                                "Markdowner",
+                                "Tagger",
+                                "Templater",
                                 "HelloWorld",
                                 "Texter"
                             ],
                             "TEMPLATE": "fluid",
+                            "SKIN_BASE_DIRECTORY": "/skins/",
+                            "TEMPLATE_BASE_DIRECTORY": "/templates/",
+                            "TEMPLATE_FILE_NAME": "index.php",
                             "MARKDOWN_EXTENSION": ".md",
+                            "SAFE_PARSE": false,
                             "INDEX_FILES": [
                                 "index.php",
                                 "index.html",
                                 "index.html",
                                 "index.md"
                             ],
-                            "CSS_INLINE_ENABLED": true,
-                            "JS_INLINE_ENABLED": true
+                            "CSS_INLINE_ENABLED": false,
+                            "JS_INLINE_ENABLED": false
 
                         },
-                "EMBED_TAGS": {
+                "EMBED_TAGS_INACTIVE": {
                     "SIDE_BAR": "sidebar.md",
                     "NAV_BAR": "navbar.md"
                 },

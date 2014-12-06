@@ -266,7 +266,9 @@ class DowncastCacheController{
          * 
          */
  
-        $io->renderTemplate( "templates/" . strtolower( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE' ] ) . "/index.php" );
+       // $html=$io->renderFile( "templates/" . strtolower( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE' ] ) . "/index.php",false );
+         $html=$io->renderFile( $io->file_joinPaths(( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE_BASE_DIRECTORY' ]), strtolower( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE' ] ), strtolower( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE_FILE_NAME' ])),false );
+        echo $html;
         $io->doActionHooks( 'dc_after_template' );
         $io->doActionHooks( 'dc_controller_end' );
 

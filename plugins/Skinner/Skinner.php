@@ -44,7 +44,7 @@ class Skinner extends DowncastPlugin {
          */
         $this->setSkin(
                 '/usage/' // Relative URL 
-                , '/bootstrap/2.3.2/journal' // Skins
+                , array('/bootstrap/2.3.2/superhero',"/highlightjs/8.3") // Skins
         );
 
         $this->setSkin(
@@ -75,7 +75,7 @@ class Skinner extends DowncastPlugin {
          * 
          */
 
-        $this->downcast()->addActionHook( 'dc_content', array( $this, 'changeSkin' ) );
+        $this->downcast()->addActionHook( 'dc_page_info', array( $this, 'changeSkin' ) );
 
 
 
@@ -102,12 +102,12 @@ class Skinner extends DowncastPlugin {
         
         $skin_map = $this->SKIN_MAP;
 
-        $this->downcast()->debugLog( '$url = ', $url, true, false );
+        $this->downcast()->debugLog( '$url = ', $url, 'plugin_skinner', false );
 
 
         if ( in_array( $url, array_keys( $skin_map ) ) ){
 
- $this->downcast()->debugLog( 'changed skin', '', true, false );
+ $this->downcast()->debugLog( 'changed skin', '', 'plugin_skinner', false );
 
             $this->downcast()->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKIN' ] = $skin_map[ $url ];
   

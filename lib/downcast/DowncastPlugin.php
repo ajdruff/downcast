@@ -59,21 +59,25 @@ class DowncastPlugin   {
      * @return void
      */
     private function _addTags() {
+      
+        
         $plugin_id = get_class( $this );
-        $embed_tags = $this->downcast()->CONFIG[ 'PLUGIN' ][ $plugin_id ][ 'EMBED_TAGS' ];
-        $content_tags = $this->downcast()->CONFIG[ 'PLUGIN' ][ $plugin_id ][ 'CONTENT_TAGS' ];
-        /*
-         * Add EMBED_TAGS
+        
+        
+                   /*
+         * Add Content Tags
          */
-        foreach ( $embed_tags as $tag ) {
-            $this->downcast()->addEmbedTag( $tag );
-}
+ 
+        $this->downcast()->addContentTags( $this->downcast()->CONFIG[ 'PLUGIN' ][ $plugin_id ][ 'CONTENT_TAGS' ] );
+   
         /*
-         * Add CONTENT_TAGS
+         * Add Embed Tags
          */
-        foreach ( $content_tags as $tag ) {
-          $this->downcast()->addContentTag( $tag );
-}
+
+        $this->downcast()->addEmbedTags( $this->downcast()->CONFIG[ 'PLUGIN' ][ $plugin_id ][ 'EMBED_TAGS' ] );
+       
+        
+
        
 }
 
