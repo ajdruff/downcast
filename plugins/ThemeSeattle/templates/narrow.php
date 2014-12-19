@@ -7,7 +7,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <!-- Le styles -->
+    <!-- styles -->
      {CSS}
     <style type="text/css">
       body {
@@ -47,7 +47,9 @@
       }
     </style>
       
-
+    <!-- scripts -->
+     {JS}
+     
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
       <script src="../assets/js/html5shiv.js"></script>
@@ -96,6 +98,6 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-               {JS}
+               {JS_FOOTER}
   </body>
 </html>

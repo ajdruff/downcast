@@ -1,0 +1,38 @@
+{"PLUGIN":
+            {
+                "INFO":
+                        {
+                            "NAME": "DemoForms",
+                            "DESCRIPTION": "Adds links to forms to demonstrate how to use the Forms plugin. ",           
+                            "COMMENT" : "",
+                            "VERSION" : "1.0"
+
+                        },
+                "CONFIG":
+                        {
+                           "CSS":
+                                    [
+
+                                    ],
+                            "JS":
+                                    [
+                                        {
+                                            "id": "demoforms",                                         
+                                            "active": true,
+                                            "inline": true,
+                                            "footer": true,
+                                            "path": "/js/dropdown.js"
+                                        }
+
+
+                                    ] 
+                        },
+                "EMBED_TAGS": {
+                },
+                "CONTENT_TAGS": {
+                }
+            }
+}  
+
+
+

@@ -1,10 +1,60 @@
-{    "PLUGIN_INFO": {
-        "name": "ViewSource",
-        "description": "Adds a 'View Source' tab at top of each page. Clicking the tab, shows the source of the page.",        
-        "slug": "ViewSource"
-    },
-    "EMBED_TAGS": {
-    },
-    "CONTENT_TAGS": {
-    }
+{"PLUGIN":
+            {
+                "INFO":
+                        {
+                            "NAME": "ViewSource",
+                            "DESCRIPTION": "Adds a 'View Source' tab at top of each page. Clicking the tab, shows the source of the page.",
+                            "COMMENT": "",
+                            "VERSION": "1.0"
+
+                        },
+                "CONFIG":
+                        {
+                            "CSS":
+                                    [
+                                        {
+                                            "id": "example-css",
+                                            "active": false,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "/add/path/to/css/here/style.css"
+                                        }
+
+
+
+                                    ],
+                            "JS":
+                                    [
+                                        {
+                                            "id": "view-source-common.js",
+                                            "active": true,
+                                            "inline": true,
+                                            "footer": true,
+                                            "path": "/js/view-source-common.js"
+                                        },
+                                                                                {
+                                            "id": "view-source-jquery-plugins.js",
+                                            "active": true,
+                                            "inline": true,
+                                            "footer": true,
+                                            "path": "/js/view-source-jquery-plugins.js"
+                                        },
+                                                                                {
+                                            "id": "view-source",
+                                            "active": true,
+                                            "inline": true,
+                                            "footer": true,
+                                            "path": "/js/view-source.js"
+                                        }
+
+
+
+                                    ]
+
+                        },
+                "EMBED_TAGS": {
+                },
+                "CONTENT_TAGS": {
+                }
+            }
 }

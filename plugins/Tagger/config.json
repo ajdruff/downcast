@@ -3,22 +3,44 @@
                 "INFO":
                         {
                             "NAME": "Tagger",
-                            "DESCRIPTION": "Removes Sidebars, Navbars, or replace or modify the content of any Content or Embed Tag in a Template.",           
-                            "COMMENT" : "",
-                            "VERSION" : "1.0"
+                            "DESCRIPTION": "Removes Sidebars, Navbars, or replace or modify the content of any Content or Embed Tag in a Template.",
+                            "COMMENT": "",
+                            "VERSION": "1.0"
 
                         },
                 "CONFIG":
                         {
-                            "CSS": [
-                            ],
-                            "JS": [
-                            ]
+                            "CSS":
+                                    [
+                                        {
+                                            "id": "example-css",
+                                            "active": false,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "/add/path/to/css/here/style.css"
+                                        }
+
+
+
+                                    ],
+                            "JS":
+                                    [
+                                        {
+                                            "id": "example-script",
+                                            "active": false,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "/add/path/to/css/here/script.js"
+                                        }
+
+
+
+                                    ]
                         },
                 "EMBED_TAGS": {
                 },
                 "CONTENT_TAGS": {
                 }
             }
-}  
+}
 

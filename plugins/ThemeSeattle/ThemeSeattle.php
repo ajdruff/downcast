@@ -18,7 +18,7 @@
  * @license    http://www.php.net/license/3_01.txt  PHP License 3.01
  * 
  */
-class ThemeSeattle extends DowncastPlugin {
+class ThemeSeattle extends DowncastTheme {
 
     /**
      * Configure
@@ -31,18 +31,13 @@ class ThemeSeattle extends DowncastPlugin {
      */
     public function config() {
 
-        /*
-         * Make the default Template the same as configured one
-         */
-        $this->TEMPLATE_FILE_NAME_DEFAULT = "index.php";
-
 
         /*
          * Map Templates to URL 
          * 
          * You must add trailing and leading slashes when there is no file extension in the url request.
          */
-        $this->setTemplate(
+        $this->setTemplateFile(
                 '/usage/' // Relative URL 
                 , 'narrow.php' // Template File Name
         );
@@ -52,87 +47,6 @@ class ThemeSeattle extends DowncastPlugin {
 
     }
 
-    /**
-     * Inititialize
-     *
-     * Plugin Initialization
-     * Add any code here that you want fired when you create plugin and just after configuration.
-     *
-     * @param none
-     * @return void
-     */
-    public function init() {
-
-        /*
-         * Add An Action Hook to Tell DownCast to Call Our Method Before the template is requested
-         * 
-         * 
-         */
-
-        $this->downcast()->addActionHook( 'dc_before_template', array( $this, 'changeTemplate' ) );
-
-
-
-
-
-
-    }
-
-    /**
-     * Change Template
-     *
-     * Returns Text (Markdown is not parsed) but with line breaks replaced with br
-     *
-     * @param none
-     * @return $text The parsed Text
-     */
-    public function changeTemplate() {
-
-        /*
-         * set defaults
-         * 
-         * 
-         */
-
-        $this->downcast()->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE_BASE_DIRECTORY' ] =dirname(__FILE__);//"plugins/ThemeSeattle";
-        $this->downcast()->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE' ] ="templates";//the parent directory name containing all the templates
-        
-        $page_info = $this->downcast()->getPageInfo();
-
-
-        $url = $page_info[ 'url' ];
-        $template_map = $this->TEMPLATE_MAP;
-
-        if ( in_array( $url, array_keys( $template_map ) ) ){
-
-
-            $this->downcast()->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE_FILE_NAME' ] = $template_map[ $url ];
-
-        } else {
-
-            $this->downcast()->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE_FILE_NAME' ] = $this->TEMPLATE_FILE_NAME_DEFAULT;
-
-        }
-
-
-
-}
-
-    /**
-     * Set Template Path
-     *
-     * Sets the Template a URL should use
-     *
-     * @param $url string The url to which the template should be applied
-     * @param $template_name string The template name
-     * @return void
-     */
-    public function setTemplate( $url, $template_name ) {
-        $template_map = $this->TEMPLATE_MAP;
-        $template_map[ $url ] = $template_name;
-        $this->TEMPLATE_MAP = $template_map;
-
-    }
 
 }
 

@@ -10,13 +10,34 @@
                         },
                 "CONFIG":
                         {
-                            "CSS": [
-                                "myawesomeplugin/css/styles.css",
-                                "morestylescss/css/styles.css"
-                            ],
-                            "JS": [
-                                "myawesomeplugin/js/script.js"
-                            ]
+                            "CSS":
+                                    [
+                                        {
+                                            "id": "example-css",
+                                            "active": false,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "/add/path/to/css/here/style.css"
+                                        }
+
+
+
+                                    ],
+                            "JS":
+                                    [
+                                        {
+                                            "id": "example-script",
+                                            "active": false,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "/add/path/to/css/here/script.js"
+                                        }
+
+
+
+                                    ]
+
+
                         },
                 "EMBED_TAGS": {
                 },

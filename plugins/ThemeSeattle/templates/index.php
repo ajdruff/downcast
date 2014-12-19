@@ -26,7 +26,7 @@
         
                 <!-- styles -->
        {CSS}
-        
+        {JS}
      
 
         <style type="text/css">
@@ -130,7 +130,7 @@
 ================================================== -->
         <!-- Placed at the end of the document so the pages load faster -->
 
-               {JS}
+               {JS_FOOTER}
 
 </body>
 </html>

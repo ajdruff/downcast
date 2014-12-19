@@ -3,51 +3,72 @@
                 "INFO":
                         {
                             "NAME": "ThemeSeattle",
-                            "DESCRIPTION": "Sample Theme",           
-                            "COMMENT" : "",
-                            "VERSION" : "1.0"
+                            "DESCRIPTION": "Sample Theme",
+                            "COMMENT": "",
+                            "VERSION": "1.0"
 
                         },
                 "CONFIG":
                         {
+
                             "CSS":
                                     [
-                                        "http://fonts.googleapis.com/css?family=Oswald%7CNoticia+Text"
-                                    ]
-                            ,
-                            "CSS_INLINE":
-                                    [
-                                        "css/flatly/css/bootstrap.min.css",
-                                        "css/flatly/css/bootstrap-responsive.min.css"
-                                    ]
-                            ,
-                            "JS":
-                                    [
-                                        "https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"
+                                        {
+                                            "id": "bootstrap-fonts",
+                                            "active": true,                                            
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "http://fonts.googleapis.com/css?family=Oswald%7CNoticia+Text"
+                                        },
+                                        {
+                                            "id": "bootstrap",
+                                            "active": true,                                            
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "css/flatly/css/bootstrap.min.css"
+                                        },
+                                        {
+                                            "id": "bootstrap-responsive",
+                                            "active": true,                                            
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "css/flatly/css/bootstrap-responsive.min.css"
+                                        }
+
+
 
                                     ],
-                            "JS_INLINE":
+                            "JS":
                                     [
-                                        "/js/bootstrap.min.js"
+                                        {
+                                            "id": "jquery",
+                                            "comment": "Set active=false. SharedScripts plugin loads this.",
+                                            "active": false,                                            
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"
+                                        }
+
+
 
                                     ]
 
                         },
                 "EMBED_TAGS": {
-                    "FEATURE1":"example-content/fluid/feature1.md",
-                    "FEATURE2":"/plugins/ThemeSeattle/content/feature2.md",
-                    "FEATURE3":"/plugins/ThemeSeattle/content/feature3.md",
-                    "FEATURE4":"/plugins/ThemeSeattle/content/feature4.md",
-                    "FEATURE5":"/plugins/ThemeSeattle/content/feature5.md",
-                    "FEATURE6":"/plugins/ThemeSeattle/content/feature6.md",
-                    "SIDE_BAR":"/plugins/ThemeSeattle/content/sidebar.md",
-                    "NAV_BAR":"/plugins/ThemeSeattle/content/navbar.md"
+                    "FEATURE1": "example-content/fluid/feature1.md",
+                    "FEATURE2": "/plugins/ThemeSeattle/content/feature2.md",
+                    "FEATURE3": "/plugins/ThemeSeattle/content/feature3.md",
+                    "FEATURE4": "/plugins/ThemeSeattle/content/feature4.md",
+                    "FEATURE5": "/plugins/ThemeSeattle/content/feature5.md",
+                    "FEATURE6": "/plugins/ThemeSeattle/content/feature6.md",
+                    "SIDE_BAR": "/plugins/ThemeSeattle/content/sidebar.md",
+                    "NAV_BAR": "/plugins/ThemeSeattle/content/navbar.md"
                 },
                 "CONTENT_TAGS": {
                     "THEME_CONTENT_FOLDER": "/plugins/ThemeSeattle/content"
                 }
             }
-}  
+}
 
 
 

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * SkinDemo DownCast Plugin
+ * DemoSkins DownCast Plugin
  *
  * Adds a set of links or a dropdown that allows you to select a skin, then sets a session variable that customizes the skin for the user.
  * Because a session is being used, the change will only impact the single browser session and will be reset when the browser window is closed or cookies are cleared.
@@ -25,7 +25,7 @@
  * @license    http://www.php.net/license/3_01.txt  PHP License 3.01
  * 
  */
-class SkinDemo extends DowncastPlugin {
+class DemoSkins extends DowncastPlugin {
 
     /**
      * Configure

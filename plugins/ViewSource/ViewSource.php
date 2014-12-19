@@ -4,19 +4,26 @@
  * ViewSource DownCast Plugin
  * 
  * 
- * For specific or all urls, replace or Modify the content of any Content or Embed Tag in a Template
+ * Adds a 'View Source' tag beside a content element,that when clicked shows
+ * the source in a code block.
+ * 
  * .
  * 
  * Usage:
+ * Browse to the help documentation for this plugin by going to 
+ * 'http://<your-web-site-domain>/plugins/<PluginName>/help/' 
+ * or by reading the readme.md contained in the root folder of this plugin
  * 
  * 
 
+ * @package Downcast
+ * @author Andrew Druffner <andrew@nomstock.com>
+ * @copyright  2012 Andrew Druffner
+ * @license    http://www.php.net/license/3_01.txt  PHP License 3.01
  * 
  */
 
 class ViewSource extends DowncastPlugin {
-
-    private $_tag_map = null;
 
     /**
      * Configure
@@ -29,65 +36,53 @@ class ViewSource extends DowncastPlugin {
      */
     public function config() {
 
-
         /*
-         * Example 1 - Remove Sidebar from http://example.com/about/
+         * Configure Layout
          * 
-         * $this->modifyTag( 'SIDE_BAR', '/about/' );//remove is default. to replace, add a 3rd argument
+         * Required Templates
+         * $this->VIEW_SOURCE_LINK_TEMPLATE  The link html. Use the {VIEW_SOURCE_TEXT} and {RELATIVE_PATH}
+         * $this->VIEW_SOURCE_CONTENT_TEMPLATE
+         * Required Tags:
+         * {RELATIVE_PATH} The relative file path to the page content or element. href of links must be set to this
+         * {VIEW_SOURCE_TEXT}The anchor text
+         * {VIEW_SOURCE_LINK} The hyperlink that triggers showing/hiding source
+         * {CONTENT} The content of the page or page element
+         * 
+         * Example 
+         * 
+         * The following settings will place a 'Toggle Source' link , formatted as a label, at the top of each content element.
+         * 
+          $this->VIEW_SOURCE_TEXT = 'Toggle Source';
+          $this->VIEW_SOURCE_LINK_TEMPLATE = '<a class="view_source label" id="link_{ID}" href="{RELATIVE_PATH}">{VIEW_SOURCE_TEXT}</a>';
+          $this->VIEW_SOURCE_CONTENT_TEMPLATE = '{CONTENT}{VIEW_SOURCE_LINK}';
+         * 
+         * Troubleshooting:
+         * Make sure that 'view_source' is added as a class to your VIEW_SOURCE_LINK_TEMPLATE. Without this class, the javascript will not detect a click
+         * link's id must be included and be in the form id="link_{ID}"
          * 
          */
+        $this->VIEW_SOURCE_TEXT = 'src';
+        $this->VIEW_SOURCE_LINK_TEMPLATE = '<a class="view_source label"  title="view source@{RELATIVE_PATH}" href="{RELATIVE_PATH}">{VIEW_SOURCE_TEXT}</a>';
+        $this->VIEW_SOURCE_CONTENT_TEMPLATE = '{CONTENT}{VIEW_SOURCE_LINK}';
 
+        /*
+         * Content Element Source Links
+         * true to add a link near each content element to view its source
+         * false to not add it.
+         * Default:false
+         */
 
+        $this->REVEAL_ALL = false;
 
 
         /*
-         * Example 2 - Modify Navbar for all urls ( using '*' wildcard ) 
-         * 
-
-          $different_navbar = "**My New Sidebar** | [Link 1](#) | [Link 2](#)";
-          $different_navbar = $this->downcast()->parseMarkdown( $different_navbar );
-          $this->modifyTag( 'NAV_BAR', '*' , $different_navbar);
-         * 
+         * Don't edit below this line
          */
 
-        /*
-         * Example 3- Remove Sidebar just from home page
-         * $this->modifyTag( 'SIDE_BAR', '/' );
-         */
-
-
-
-
-        /*
-         * Example 4 - Add The time and date to the sidebar
-         * We'll use a callback , which can be used in place of text 
-         * $this->modifyTag( 'SIDE_BAR', '/', array( $this, 'filterAddTime' ) );
-         */
-
-
-
+        $this->downcast()->addPage( '/viewsource/get-source/', dirname( __FILE__ ) . '/content/get-source.php' );
+        $this->downcast()->addPage( '/viewsource/demo/', dirname( __FILE__ ) . '/content/view-source-demo.php' );
 
     }
-
-    /**
-     * Modify Tag
-     *
-     * Remove or Modify a Tag from a Template
-     *
-     * @param $url string The url to which the template should be applied
-     * @param $template_name string The template name
-     * @param $replacement_text string The text to replace the contents of the tag
-     * @return void
-     */
-    public function modifyTag( $tag_name, $url, $replacement_text = '' ) {
-        /*
-         * Add the Tag to the tag map array
-         * we'll then check the array in the filter method
-         */
-        $this->_tag_map[ $tag_name ][ $url ] = $replacement_text;
-        $this->downcast()->addTagFilter( $tag_name, array( $this, 'filterTag' ) );
-
-}
 
     /**
      * Inititialize
@@ -99,61 +94,97 @@ class ViewSource extends DowncastPlugin {
      * @return void
      */
     public function init() {
-         $this->downcast()->addTagFilter( 'CONTENT', array( $this, 'filterContent' ) );
+
+        if ( $this->REVEAL_ALL ){
+
+            /*
+             * add an empty content tag so we don't add 2 links 
+             * since the VIEWSOURCE tag should work only if the CONTENT_ELEMENT SOURCE LINKS are disabled
+
+             */
+            $this->downcast()->addContentTag( 'VIEW_SOURCE', '' );
+        }
+
+        $this->downcast()->addFilterHook( 'dc_embed_tag', array( $this, 'filterEmbedTag' ) );
+
     }
 
     /**
-     * Content Filter
+     * Filter - Embed Tag
      *
-     * Filters the Page's Content 
+     * Filters the Embed Tag
      *
-     * @param $tag_name string The name of the tag to be filtered
-     * @param $content string The content of the tag to be filtered
+     * @param string $content The rendered content of the embed tag
+     * @param $args array The arguments passed by the doFilterHooks method
      * @return void
      */
-    public function filterContent( $tag_name, $content ) {
+    public function filterEmbedTag( $content, $args ) {
+
+        $tag_name = $args[ 'tag_name' ];
+        $file_path = $args[ 'file_path' ];
+
+        $relative_path = $this->downcast()->file_getRelativePath( $file_path );
+        $id = $this->convertToDomID( $relative_path );
 
 
-        $page_info = $this->downcast()->getPageInfo();
-        
-        $query_vars=$page_info['query_vars'];
-        
-        if (isset($query_vars['view_source'])){
+
+        $tags[ 'RELATIVE_PATH' ] = $relative_path;
+        $tags[ 'VIEW_SOURCE_TEXT' ] = $this->VIEW_SOURCE_TEXT; //the text that appears in the 'view source' link
+        $this->VIEW_SOURCE_LINK_TEMPLATE = str_replace( 'href', ' data-target="' . $id . '" href', $this->VIEW_SOURCE_LINK_TEMPLATE );
+        $view_source_link = $this->downcast()->crunchTpl( $tags, $this->VIEW_SOURCE_LINK_TEMPLATE );
+
+        unset( $tags );
+        $tags[ 'VIEW_SOURCE_LINK' ] = $view_source_link;
+
+        $tags[ 'ID' ] = $id;
+        /*
+         * Add the Link only if content element source links are enabled
+         * OR
+         * there is a {VIEW_SOURCE} tag in the content
+         */
+               if ( ($this->REVEAL_ALL )||( stripos($content,'{VIEW_SOURCE}' )!==false )){
+             $content=str_replace('{VIEW_SOURCE}','',$content);
             
-           $view_source=$query_vars['view_source'];
-            
-            
-        }else {
-            
-            return $content;
-        }
-   
-        if ( $view_source==1) {
-         $content='';   
-}else {
-    
-    $content='';
-    
-}
-        
-        
+
+             $content = '<div id="' . $tags[ 'ID' ] . '">' . $content . '</div>';
+        $tags[ 'CONTENT' ] = $content;
+        $content = $this->downcast()->crunchTpl( $tags, $this->VIEW_SOURCE_CONTENT_TEMPLATE );
+              
+   }
+
+
+
         return $content;
-
 
 }
 
     /**
-     * filter Add Time
+     * Short Description
      *
-     * Modify Content, adding Time to the end of it
+     * Long Description
      *
-     * @param $tagname string The name of the tag
-     * @param $content string The content to be filtered
-     * @return string The modified content to be returned
+     * @param none
+     * @return void
      */
-    public function filterAddTime( $tagname, $content ) {
+    public function convertToDomID( $text ) {
+        //text.replace(/\W+/g, " ");
+        /*
+         * replace slashes and dashes
+         * with underscores
+         */
+        $text = str_replace( array( '/', '\\', '-' ), '_', $text );
+        /*
+         * replace non-alpha at startr of string
+         */
+        $text = preg_replace( '~^[^\da-z]+~i', '', $text );
 
-        return $content . '<div>' . date( "F j, Y, g:i a" ) . '</div>';
+        /*
+         * remove all remaining non-alphanumeric except underscores
+         */
+        return(preg_replace( '/\W+/', "", $text ));
+
+
+
     }
 
 
