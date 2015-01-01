@@ -67,18 +67,18 @@ class DemoForms extends DowncastPlugin {
                 'url' => '/form/examples/form-elements/',
                 'file' => dirname( __FILE__ ) . '/content/phbc-form-examples/form-elements.php'
             ),
-            'Ajax' => array(
-                'url' => '/form/examples/ajax/',
-                'file' => dirname( __FILE__ ) . '/content/phbc-form-examples/ajax.php'
+            'Ajax - Example 1 Geocode' => array(
+                 'url' => '/form/examples/ajax/geocode/',
+                'file' => dirname( __FILE__ ) . '/content/phbc-form-examples/form-elements.php'
             ),
-            'Ajax Login' => array(
-                'url' => '/form/examples/ajax/login/',
-                'file' => dirname( __FILE__ ) . '/content/phbc-form-examples/ajax-login.php'
+            'Ajax - Example 2 Login' => array(
+                'url' => '/form/examples/ajax/login/downcast/',
+                'file' => dirname( __FILE__ ) . '/content/phbc-form-examples/ajax-login-downcast.php'
             ),
-            'Ajax Login with Server Validation' => array(
-                'url' => '/form/examples/ajax/login-server-validation/',
-                'file' => dirname( __FILE__ ) . '/content/phbc-form-examples/ajax-login-using-server-side-validation.php'
-            ),
+            'Ajax - Example 3 Custom Javascript' => array(
+                'url' => '/form/examples/ajax/login/custom/',
+                'file' => dirname( __FILE__ ) . '/content/phbc-form-examples/ajax-login-custom.php'
+            )
         );
 
 

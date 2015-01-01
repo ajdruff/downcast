@@ -22,3 +22,19 @@ This is a template for a simple marketing or informational website. It includes 
 
 
 
+
+###Tabs Example
+
+* [HTML{: data-toggle="tab" id="view_source_show_html" }](#html)
+* [View Source{: data-toggle="tab" id="view_source_show_source"}](#source)
+{: .nav .nav-tabs}
+
+<div id="myTabContent" class="tab-content">
+<p id="html" class="tab-pane">'<div id="view_source_content">{CONTENT}</div></p>
+<p id="source" class="tab-pane"><div id="view_source_content">{CONTENT}</div></p>
+</div>
+
+
+
+
+

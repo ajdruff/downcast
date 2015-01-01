@@ -30,10 +30,8 @@ ViewSource.ViewSource = function() {
     /** 
      * A collection of retrieved source code objects
      * 
-     * @type {Object} 
-     * 
+     * @type {Object}
      * */
-
     var sources = {};
 
     /** 
@@ -146,7 +144,7 @@ ViewSource.ViewSource = function() {
      * Adds Line Numbers to the Source View
      *
      * @param element el The element clicked
-     * @return {dom} The button that toggles the source
+     * @return bool True if button is the number toggle button and the numbers were toggled.otherwise,false. false allows the caller to continue to process click events from other buttons with the same class 
      */
     function toggleLineNumbers(el) {
 

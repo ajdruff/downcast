@@ -14,10 +14,11 @@
  * @license    http://www.php.net/license/3_01.txt  PHP License 3.01
  * @filesource
  */
-class DowncastBase   {
+class DowncastBase {
 
     protected $_content = null;
 
+    static $instances=null;
     /**
      * Constructor
      *
@@ -33,6 +34,13 @@ class DowncastBase   {
      */
     public function __construct( $is_content = false ){
 
+        /*
+         * Keep a reference to the instantiated class
+         * this allows other non-children to get the object without knowing its variable name.
+         * just do:
+         * $downcast_object=Downcast::$instances[0];
+         */
+self::$instances[] = $this;
 
 
         $this->doActionHooks( 'dc_controller_start' );
@@ -48,7 +56,7 @@ class DowncastBase   {
         /*
          * Load Site Configuration File
          */
-        
+
         $this->_loadSiteConfigFile();
 
         /*
@@ -119,12 +127,12 @@ class DowncastBase   {
         $this->addEmbedTags( $this->CONFIG[ 'TEMPLATE' ][ 'EMBED_TAGS' ] );
 
 
-        $this->_loadSkinConfigFile();
+        $this->_loadSkins();
 
 
         $this->doActionHooks( 'dc_configuation_complete' );
 
-        //   $this->_addTags(); //add site and template content and embed tags
+//   $this->_addTags(); //add site and template content and embed tags
 
 
 
@@ -139,7 +147,7 @@ class DowncastBase   {
 
         if ( $page_info[ 'file_exists' ] ) {
             $this->_addFileEmbedTag( 'CONTENT', $page_info[ 'file_path' ] );
-      } else {
+} else {
 
 
             header( "HTTP/1.0 404 Not Found", false );
@@ -147,13 +155,14 @@ class DowncastBase   {
 
             $this->addEmbedTag( 'CONTENT', "errors/404/index.md?page_not_found=" . $page_info[ 'url' ] );
 
-      }
+}
 
 
 
 
 
         $this->_init();
+
 
     }
 
@@ -192,12 +201,12 @@ class DowncastBase   {
          * Add Debug Filters
          */
 
-        // $this->debugHooks();
-        //$this->debugAddFilter('doActionHooks');
-        //  $this->debugAddFilter( 'render_page' );
-        //$this->debugAddFilter('embed_tags');   
-       //$this->debugAddFilter('content-tags');       
-        //  $this->debugAddFilter('plugin_skinner');
+// $this->debugHooks();
+//$this->debugAddFilter('doActionHooks');
+        $this->debugAddFilter( 'render-page', false );
+        $this->debugAddFilter( 'embed-tags', false );
+        $this->debugAddFilter( 'content-tags', false );
+//  $this->debugAddFilter('plugin_skinner');
 
 
 
@@ -212,7 +221,7 @@ class DowncastBase   {
 
 
 
-}
+    }
 
     /**
      * Short Description
@@ -277,7 +286,7 @@ class DowncastBase   {
 }
         return $this->_page_info;
 
-        }
+    }
 
     /**
      * Add Tag
@@ -313,7 +322,7 @@ class DowncastBase   {
 
         return ($this->_addFileEmbedTag( $tag_name, $file_info[ 'file_path' ] ));
 
-}
+    }
 
     /**
      * Add File Embed Tag ( private ) 
@@ -329,8 +338,8 @@ class DowncastBase   {
     private function _addFileEmbedTag( $tag_name, $file_path ) {
 //only add template tags if we are not parsing content or we'll end up in a loop
 
-        $this->debugLog( '$tag_name = ', $tag_name, 'embed_tags', false );
-        $this->debugLog( '$file_path = ', $file_path, 'embed_tags', false );
+        $this->debugLog( '$tag_name = ', $tag_name, 'embed-tags', false );
+        $this->debugLog( '$file_path = ', $file_path, 'embed-tags', false );
 
 
         $tags = $this->_config_properties[ 'EMBED_TAGS' ];
@@ -346,16 +355,30 @@ class DowncastBase   {
         if ( !isset( $tags[ $tag_name ] ) ){
 
             $tags[ $tag_name ] = $this->renderFile( $file_path );
-            $this->debugLog( $tag_name . ' = ', $tags[ $tag_name ], 'embed_tags', false );
-            $this->debugLog( '$tags = ', $tags, 'render_page', false );
 
-        }
+            /*
+             * Apply Filter Hooks
+             */
+            if ( !$this->isAjax() ) { //you are not allows to filter embed tags with ajax or it corrupts the content tag,wrecking all ajax response
+                $tags[ $tag_name ] = $this->applyFilterHooks(
+                        'dc_embed_tag', //hook name
+                        $tags[ $tag_name ], //content to be filtered
+                        array(
+                    'tag_name' => $tag_name,
+                    'file_path' => $file_path
+                        )
+                );
+}
+            $this->debugLog( $tag_name . ' = ', $tags[ $tag_name ], 'embed-tags', false );
+            $this->debugLog( '$tags = ', $tags, 'render-page', false );
+
+}
         $this->setConfig( 'EMBED_TAGS', $tags );
 
 
 
 
-}
+    }
 
     /**
      * Get Page Info
@@ -378,7 +401,7 @@ class DowncastBase   {
 
         $url = $_SERVER[ 'REQUEST_URI' ];
 
-        //initialize
+//initialize
         $url = $this->addLeadingSlash( $url );
 
         /*
@@ -403,7 +426,7 @@ class DowncastBase   {
 ############# end get file
 
 
-     }
+    }
 
     /*
      * @var string
@@ -425,6 +448,9 @@ class DowncastBase   {
     public function renderFile( $file_path, $render_markdown = true ) {
 
 
+
+
+
         /*
          * First check memory cache in case
          * this is the second time rendering the  file
@@ -433,9 +459,10 @@ class DowncastBase   {
             return $this->$_render_cache[ $file_path ];
 }
 
-        $this->debugLog( '$file_path = ', $file_path, 'render_page', false );
+        $this->debugLog( '$file_path = ', $file_path, 'render-page', false );
 
-        $this->debugLog( '$this->CONTENT_TAGS = ', $this->CONTENT_TAGS, 'render_page', false );
+        $this->debugLog( '$this->CONTENT_TAGS = ', $this->CONTENT_TAGS, 'content-tags', false );
+        $this->debugLog( '$this->EMBED_TAGS = ', $this->EMBED_TAGS, 'embed-tags', false );
 
         /* SAFE_PARSE = true 
          * For security reasons, we only execute the file
@@ -455,6 +482,8 @@ class DowncastBase   {
 
                 include($file_path);
                 $file_contents = ob_get_clean();
+
+
 } else {
 
                 $file_contents = file_get_contents( $file_path );
@@ -470,43 +499,54 @@ class DowncastBase   {
             $file_contents = ob_get_clean();
 
 
+
 }
 
 
 
         $tags = $this->CONTENT_TAGS;
         if ( !is_array( $tags ) )
-            {
+{
             $tags = array();
 }
+
+
+
         /*
          * Merge in the Embed Tags 
          */
         if ( is_array( $this->EMBED_TAGS ) ){
             $tags = array_merge( $tags, $this->EMBED_TAGS );
-            }
+}
 
         $this->debugLog( 'rendering $file_path = ', $file_path, 'content-tags', false );
         $this->debugLog( '$this->CONTENT_TAGS = ', $this->CONTENT_TAGS, 'content-tags', false );
- $this->debugLog( '$tags = ', $tags, 'content-tags', false );
+        $this->debugLog( 'All tags = ', $tags, 'render-page', false );
+
+
+
 
         /*
          * Render File If Exists
          * 
          */
 
+
+
         $html = $this->crunchTpl( $tags, $file_contents );
-        if ( $render_markdown ){
+        if ( $render_markdown &&
+                !$this->isAjax() //do not parse ajax since we assume it may contain json which would screw up the format
+        ){
             $this->_render_cache[ $file_path ] = $this->parseMarkdown( $html );
-        } else {
+} else {
             $this->_render_cache[ $file_path ] = ( $html );
-        }
+}
 
         return($this->_render_cache[ $file_path ]);
 
 
 
-         }
+    }
 
     /**
      * Render Page
@@ -520,7 +560,7 @@ class DowncastBase   {
 
 
 
-        //initialize
+//initialize
         $file = array();
         $markdown = false;
         $url = $this->addLeadingSlash( $url );
@@ -577,33 +617,33 @@ class DowncastBase   {
                     break;
 
 
-                }
+}
 
             if ( $echo )
-        {
+{
                 if ( $markdown ){
 
                     echo ( $this->parseMarkdown( ($this->renderTemplate( $file[ 'path' ], false ) ) ));
-                        } else {
+} else {
 
                     echo ( ( ($this->renderTemplate( $file[ 'path' ], false ) ) ));
-                        }
+}
 
-                        } else
-            {
+} else
+{
                 if ( $markdown ){
 
                     return ( $this->parseMarkdown( ($this->renderTemplate( $file[ 'path' ], false ) ) ));
-                             } else {
+} else {
                     return ( ( ($this->renderTemplate( $file[ 'path' ], false ) ) ));
 
-                             }
-            }
+}
+}
 
 
 
 
-            } else {
+} else {
 
             /*
              * Generate 404 if file is not found
@@ -617,17 +657,17 @@ class DowncastBase   {
 
                 header( "HTTP/1.0 404 Not Found", false );
 
-              }
+}
             return ( $this->parseMarkdown( ($this->renderPage( "errors/404/index.md?page_not_found=" . $url, false ) ) ));
 
 
 
 
-            }
+}
 
 
 
-        }
+    }
 
     /**
      * Add Leading Slash
@@ -678,10 +718,10 @@ class DowncastBase   {
 
         if ( isset( $properties[ $property_name ] ) ) {
             $config_value = $properties[ $property_name ];
-        } else {
+} else {
 
             $config_value = null;
-        }
+}
 
         return $config_value;
     }
@@ -699,7 +739,7 @@ class DowncastBase   {
 
         if ( is_null( $this->_config_properties ) ) {
             $this->_config_properties = array();
-        }
+}
         return $this->_config_properties;
     }
 
@@ -727,7 +767,7 @@ class DowncastBase   {
             if ( !file_exists( $template_path ) ) { //if file doesn't exist, try acccessing it without the tpl extension
                 return null;
 
-            }
+}
 
 
             ob_start();
@@ -736,7 +776,7 @@ class DowncastBase   {
             include($template_path);
             $template = ob_get_clean();
             $this->_template_cache[ $template_path ] = $template;
-        }
+}
 
         return $this->_template_cache[ $template_path ];
     }
@@ -783,16 +823,16 @@ class DowncastBase   {
 
             if ( is_array( $this->EMBED_TAGS ) ){
                 $tags = array_merge( $tags, $this->EMBED_TAGS );
-            }
-        }
+}
+}
 
         $html = $this->crunchTpl( $tags, $template );
 
         if ( $echo )
-        { echo $html; } else
-            {
+{ echo $html; } else
+{
             return $html;
-            }
+}
 
     }
 
@@ -828,16 +868,16 @@ class DowncastBase   {
 
             if ( is_array( $this->EMBED_TAGS ) ){
                 $tags = array_merge( $tags, $this->EMBED_TAGS );
-            }
-        }
+}
+}
 
         $html = $this->crunchTpl( $tags, $template );
 
         if ( $echo )
-        { echo $html; } else
-            {
+{ echo $html; } else
+{
             return $html;
-            }
+}
 
     }
 
@@ -882,14 +922,14 @@ class DowncastBase   {
 
 
 
-            $value = $this->applyTagFilters( $key, $value );
+            $value = $this->doTagFilters( $key, $value );
             if ( is_array( $value ) || is_object( $value ) ) {
                 $value = '<pre>' . print_r( $value, true ) . '</pre>';
-            }
+}
 
             $tags[ '{' . $key . '}' ] = $value;
             unset( $tags[ $key ] );
-        }
+}
 
 
         $html = str_ireplace( array_keys( $tags ), array_values( $tags ), $template );
@@ -925,10 +965,10 @@ class DowncastBase   {
 
         foreach ( func_get_args() as $arg ) {
             if ( $arg !== '' ) { $paths[] = $arg; }
-    }
+}
 
         return preg_replace( '#/+#', '/', join( '/', $paths ) );
-}
+    }
 
     /**
      * Join Paths (File Library)
@@ -942,7 +982,7 @@ class DowncastBase   {
 
         foreach ( func_get_args() as $arg ) {
             if ( $arg !== '' ) { $paths[] = addslashes( $arg ); }
-    }
+}
 
 
         $paths = array_map( array( $this, 'file_convertToForwardSlashes' ), $paths );
@@ -953,7 +993,7 @@ class DowncastBase   {
 
 
         return $result;
-}
+    }
 
     /**
      * Read Configuration File
@@ -1007,14 +1047,14 @@ class DowncastBase   {
          */
         $array_config = json_decode( $json_config_string, true );
 
-        if ( !is_array($array_config)) {
-                        $error_title = "<br>Unable to process corrupted configuration file " . $config_file_path . "'";
+        if ( !is_array( $array_config ) ) {
+            $error_title = "<br>Unable to process corrupted configuration file " . $config_file_path . "'";
             $error_details = 'To check for syntax errors in your json configuration file, copy and paste its contents into jsonlint: : <a href="http://jsonlint.com/">http://jsonlint.com/</a>';
 
             $this->debugLogError( $error_title, $error_details );
             return false;
-            
-    
+
+
 }
         /*
          * Check if this is the site config file, and if so, check
@@ -1029,7 +1069,7 @@ class DowncastBase   {
 
             if ( isset( $array_config[ 'SITE' ][ 'CONFIG' ][ 'CONTENT_ROOT' ] ) //check if there is a CONTENT_ROOT setting
                     && ($this->file_isSameDirectory( dirname( $config_file_path ), $this->getRootDirectory() ) ) ){ // and CONTENT_ROOT not set yet. This protects us from circular loop if 'CONTENT_ROOT' is in the config.json of the CONTENT_ROOT.
-                //    $this->setConfig( 'CONTENT_ROOT', $array_config[ SITE ][ 'CONFIG' ][ 'CONTENT_ROOT' ] );
+//    $this->setConfig( 'CONTENT_ROOT', $array_config[ SITE ][ 'CONFIG' ][ 'CONTENT_ROOT' ] );
 
                 /*
                  * Set Content Root
@@ -1042,12 +1082,12 @@ class DowncastBase   {
                 if ( $this->readConfigFile( $alternate_config_file ) === true ){
 
                     return true;
-                     }
+}
 
-                }
+}
 
 
-    }
+}
 
 
 
@@ -1104,7 +1144,7 @@ class DowncastBase   {
                 $this->addContentTag( $tag_name, $tag_value );
 
 }
-    }
+}
         /*
          * Add Embed Tags
          */
@@ -1114,7 +1154,7 @@ class DowncastBase   {
                 $this->addEmbedTag( $tag_name, $tag_value );
 
 }
-    }
+}
         if ( false ){
             /*
              * Add Plugins
@@ -1140,8 +1180,8 @@ class DowncastBase   {
 
 
 }
-    }
-    }
+}
+}
 
         return true;
     }
@@ -1191,9 +1231,9 @@ class DowncastBase   {
                 if ( $this->readConfigFile( $alternate_config_file ) === true ){
 
                     return true;
-                     }
+}
 
-                }
+}
 
 
             foreach ( $array_config[ 'CONFIG' ] as $config_name => $config_value ) {
@@ -1203,7 +1243,7 @@ class DowncastBase   {
                 $this->setConfig( $config_name, $config_value );
 
 }
-    }
+}
 
 
         /*
@@ -1215,7 +1255,7 @@ class DowncastBase   {
                 $this->addContentTag( $tag_name, $tag_value );
 
 }
-    }
+}
         /*
          * Add Embed Tags
          */
@@ -1225,7 +1265,7 @@ class DowncastBase   {
                 $this->addEmbedTag( $tag_name, $tag_value );
 
 }
-    }
+}
         if ( false ){
             /*
              * Add Plugins
@@ -1251,8 +1291,8 @@ class DowncastBase   {
 
 
 }
-    }
-    }
+}
+}
 
         return true;
     }
@@ -1276,7 +1316,7 @@ class DowncastBase   {
         if ( !is_array( $plugins ) ){
 
             $plugins = array( $plugins );
-        }
+}
 
 
 
@@ -1292,7 +1332,7 @@ class DowncastBase   {
                 if ( !is_array( $array_config[ 'PLUGIN_CSS' ] ) ){
 
                     $array_config[ 'PLUGIN_CSS' ] = array( $array_config[ 'PLUGIN_CSS' ] );
-        }
+}
 
                 foreach ( $array_config[ 'PLUGIN_CSS' ] as $css_key => $link ) {
 
@@ -1305,7 +1345,7 @@ class DowncastBase   {
                 if ( !is_array( $array_config[ 'PLUGIN_JS' ] ) ){
 
                     $array_config[ 'PLUGIN_JS' ] = array( $array_config[ 'PLUGIN_JS' ] );
-        }
+}
                 foreach ( $array_config[ 'PLUGIN_JS' ] as $js_key => $link ) {
 
                     $link = $this->file_joinPaths( "/plugins/", $root_directory, $link );
@@ -1340,7 +1380,7 @@ class DowncastBase   {
         if ( !is_array( $skin_root_directories ) ){
 
             $skin_root_directories = array( $skin_root_directories );
-        }
+}
 
 
         foreach ( $skin_root_directories as $directory_key => $_skin_root_directory ) {
@@ -1355,7 +1395,7 @@ class DowncastBase   {
                 if ( !is_array( $array_skin_config[ 'CSS' ] ) ){
 
                     $array_skin_config[ 'CSS' ] = array( $array_skin_config[ 'CSS' ] );
-        }
+}
 
                 foreach ( $array_skin_config[ 'CSS' ] as $css_key => $link ) {
 
@@ -1368,7 +1408,7 @@ class DowncastBase   {
                 if ( !is_array( $array_skin_config[ 'JS' ] ) ){
 
                     $array_skin_config[ 'JS' ] = array( $array_skin_config[ 'JS' ] );
-        }
+}
                 foreach ( $array_skin_config[ 'JS' ] as $js_key => $link ) {
 
                     $link = $this->file_joinPaths( "/skins/", $skin_root_directory, $link );
@@ -1382,7 +1422,7 @@ class DowncastBase   {
         $this->addContentTag( "SKIN_CSS", $css_string );
         $this->addContentTag( "SKIN_JS", $js_string );
 
-       }
+    }
 
     /**
      * Get File From Url
@@ -1392,9 +1432,10 @@ class DowncastBase   {
      * replaces getFileFromUrl_v1
      * 
      * @param $url string The requested url
+          * @param bool$called_recursively Whether this function is calling itself. Useful to avoid endless looping.
      * @return mixed The path to the file or false if it could not be found
      */
-    public function getFileFromUrl( $url ) {
+    public function getFileFromUrl( $url,$called_recursively=false ) {
 
 
 
@@ -1417,7 +1458,7 @@ class DowncastBase   {
             $url_info[ 'path' ] = $this->addTrailingSlash( $url_info[ 'path' ] );
 
             $url = $url_info[ 'path' ];
-        }
+}
 
 
         /*
@@ -1431,6 +1472,9 @@ class DowncastBase   {
 }
 }
 
+
+
+
         /*
          * Add any pages that were added by plugins
          * Add these to the top of the default files so they override any other
@@ -1440,6 +1484,11 @@ class DowncastBase   {
 
 
 }
+
+
+
+
+
 
 
         /* Sample result for url=http://bootdown.com/myphp.php?test=1
@@ -1489,7 +1538,7 @@ class DowncastBase   {
 
 
 } else //otherwise, if it ends in a slash, assume you want to serve index.md
-        {
+{
 
             /*
              *  Get File From URL
@@ -1550,28 +1599,29 @@ class DowncastBase   {
              * Elements would be null if file_getRealPath found they didn't exist
              */
 
-            $default_files = array_filter( $default_files );
 
+            $default_files = array_filter( $default_files );
 
 
             if ( empty( $default_files ) ){ //if array is empty, set it to false so we get a 404
                 $file[ 'path' ] = false;
-            } else {
+            //                $this->debugLog( '$file[ path ] = ', $file[ 'path' ], $url==='/form/examples/ajax/login-server-validation/', true );
+} else {
                 $file[ 'path' ] = array_shift( $default_files ); //get the file with the highest  precedence
 
 
                 $file_info = pathinfo( $file[ 'path' ] );
 
 
-                //    $file[ 'path' ] = $this->file_getRealPath( ($this->file_joinPaths( $this->CONTENT_ROOT, $this->addTrailingSlash( $url_info[ 'path' ] ) ) . "index.md" ) );
+//    $file[ 'path' ] = $this->file_getRealPath( ($this->file_joinPaths( $this->CONTENT_ROOT, $this->addTrailingSlash( $url_info[ 'path' ] ) ) . "index.md" ) );
                 $file[ 'extension' ] = $file_info[ 'extension' ];
-            }
+}
 
 
 
 
 
-        }
+}
 
 
 
@@ -1583,6 +1633,28 @@ class DowncastBase   {
         $result[ 'query_vars' ] = isset( $query_vars ) ? $query_vars : array();
 
 
+        /*
+         * Check for Virtual Pages' Default Index File
+         * 
+         * In certain circumstances, the server will attempt to find /index.php of a virtual url such as what is created
+         * when using the addPage() method.
+         * In this case, if no page is found at first, we recurse using an alternative url
+         * so instead of the originally requested /my-virtual-page/index.php , we look for /my-virtual-page/
+         * This is particularly seen with the Forms plugin.
+         */
+        if ( !$result[ 'file_path' ] ) {
+
+
+            $alternative_url = str_replace( ltrim( $_SERVER[ 'SCRIPT_NAME' ], '/' ), '', $url );
+            if ( in_array( $alternative_url, array_keys( $this->_getPages() ) ) ) {
+
+                if ( !$called_recursively) {
+                    
+
+                return $this->getFileFromUrl( $alternative_url ,true);
+}
+}
+}
 
 
 
@@ -1622,7 +1694,7 @@ class DowncastBase   {
             $url_info[ 'path' ] = $this->addTrailingSlash( $url_info[ 'path' ] );
 
             $url = $url_info[ 'path' ];
-        }
+}
 
 
         /*
@@ -1674,7 +1746,7 @@ class DowncastBase   {
             $file[ 'extension' ] = $file_info[ 'extension' ];
             $file[ 'path' ] = $this->file_getRealPath( ($this->file_joinPaths( $this->CONTENT_ROOT, $url_info[ 'path' ] ) ) );
 } else //otherwise, if it ends in a slash, assume you want to serve index.md
-        {
+{
 
             /*
              *  Get File From URL
@@ -1741,22 +1813,22 @@ class DowncastBase   {
 
             if ( empty( $default_files ) ){ //if array is empty, set it to false so we get a 404
                 $file[ 'path' ] = false;
-            } else {
+} else {
                 $file[ 'path' ] = array_shift( $default_files ); //get the file with the highest  precedence
 
 
                 $file_info = pathinfo( $file[ 'path' ] );
 
 
-                //    $file[ 'path' ] = $this->file_getRealPath( ($this->file_joinPaths( $this->CONTENT_ROOT, $this->addTrailingSlash( $url_info[ 'path' ] ) ) . "index.md" ) );
+//    $file[ 'path' ] = $this->file_getRealPath( ($this->file_joinPaths( $this->CONTENT_ROOT, $this->addTrailingSlash( $url_info[ 'path' ] ) ) . "index.md" ) );
                 $file[ 'extension' ] = $file_info[ 'extension' ];
-            }
+}
 
 
 
 
 
-        }
+}
         if ( $file[ 'path' ] === false ) { $file = false; }
 
         /*
@@ -1776,6 +1848,70 @@ class DowncastBase   {
 
 
         return $file;
+    }
+
+    /**
+     * An array of filter hooks 
+     *
+     * Holds a listing of the filter hooks added
+     * @see addFilterHook
+     * @see applyFilterHooks
+     * @var array
+     */
+    private $_filter_hooks = null;
+
+    /**
+     * Add Filter Hook
+     *
+     * Adds a callback function to the tag filters array
+     * Usage:
+     * $this->addFilterHook('dc_embed_tag',array($this,'addLink');
+     * @param string $hook_name The name of the hook. Must match its associated 'applyFilterHooks' call
+     * @param $callback callable The callback function or method
+     * @return void
+     */
+    public function addFilterHook( $hook_name, $callback ) {
+
+        $this->_filter_hooks[ $hook_name ][] = $callback;
+
+
+    }
+
+    /**
+     * Do Filter Hooks
+     *
+     * Returns the output of the addFilterHook callbacks on $hook_name
+     * @see addFilterHook
+     * @param string $hook_name The name of the hook.
+     * @param array $args The content to be filtered
+     * @return string The filtered content
+     */
+    public function applyFilterHooks( $hook_name, $content, $args ) {
+
+
+
+
+        if ( isset( $this->_filter_hooks[ $hook_name ] ) ) {
+
+
+            foreach ( $this->_filter_hooks[ $hook_name ] as $key => $callback ) {
+
+                if ( is_callable( $callback ) ) {
+
+                    $content = call_user_func( $callback, $content, $args );
+
+
+}
+
+}
+
+
+
+}
+
+        return $content;
+
+
     }
 
     private $_tag_filters = null;
@@ -1798,14 +1934,14 @@ class DowncastBase   {
     }
 
     /**
-     * Apply Tag Filters
+     * Do Tag Filters
      *
      * Returns the output of the filter callbacks on $content
-     *
+     * @deprecated Replaced by applyFilterHooks
      * @param $content string The content to be filtered
      * @return string The filtered content
      */
-    public function applyTagFilters( $tagname, $content ) {
+    public function doTagFilters( $tagname, $content ) {
 
 
 
@@ -1860,7 +1996,7 @@ class DowncastBase   {
             $this->_method_overrides[ $method_name ][ 'id' ] = $id;
             return true;
 } else
-    { return $this->_method_overrides[ $method_name ][ 'id' ];
+{ return $this->_method_overrides[ $method_name ][ 'id' ];
 
 }
 
@@ -1904,7 +2040,7 @@ class DowncastBase   {
         return $result;
 
 
-   }
+    }
 
     private $_plugins = null; //stores an array of plugin objects
 
@@ -1938,6 +2074,7 @@ class DowncastBase   {
      */
     public function getPlugin( $plugin_name ) {
 
+
         if ( isset( $this->_plugins[ $plugin_name ] ) ) {
             return $this->_plugins[ $plugin_name ];
 } else {
@@ -1946,7 +2083,7 @@ class DowncastBase   {
 }
 
 
-}
+    }
 
     /**
      * Parse Markdown
@@ -1965,7 +2102,7 @@ class DowncastBase   {
             return $result_override[ 'override_return_result' ];
 
 
-        }
+}
         include_once ("lib/bootdown/bootdown.php"); //add the bootdown library here  so we don't run into problems with a globally declared Markdown function with plugins.
         return Markdown( $text );
 
@@ -1996,9 +2133,9 @@ class DowncastBase   {
 
 
 }
-            }
-        }
 }
+}
+    }
 
     /**
      * Add Action Hook
@@ -2031,7 +2168,7 @@ class DowncastBase   {
 
         $this->_root_directory = $path;
 
-        }
+    }
 
     /**
      * Get Root Directory Path (**Not** Content Root)
@@ -2113,7 +2250,7 @@ class DowncastBase   {
             if ( !isset( $array_config[ 'SITE' ][ 'CONFIG' ][ $key ] ) ){
                 $array_config[ 'SITE' ][ 'CONFIG' ][ $key ] = $defaults_config[ 'SITE' ][ 'CONFIG' ][ $key ];
 
-            }
+}
 }
         return $array_config;
     }
@@ -2162,14 +2299,14 @@ class DowncastBase   {
     }
 
     /**
-     * Load Skin Configuration
+     * Load Skins
      *
      * Reads Configuration Files into the $this->SITE property
      *
      * @param none
      * @return void
      */
-    private function _loadSkinConfigFile() {
+    private function _loadSkins() {
 
         /*
          *  Add Skin Configuration
@@ -2181,21 +2318,18 @@ class DowncastBase   {
          */
         $this->doActionHooks( 'dc_skin_config' );
 
-        if ( !is_array( $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKIN' ] ) ) {
-            $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKIN' ] = array( $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKIN' ] );
+        if ( !is_array( $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKINS' ] ) ) {
+            $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKINS' ] = array( $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKINS' ] );
 }
 
+        $skins = $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKINS' ];
 
+        foreach ( $skins as $unique_id => $properties ) {
+            $skin_directory = $properties[ 'path' ];
 
-        $array_skin_directories = $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKIN' ];
-
-
-
-
-        foreach ( $array_skin_directories as $skin_directory ) {
-
-
-
+            if ( isset( $properties[ 'active' ] ) && (!$properties[ 'active' ]) ) {
+                continue;
+}
             $skin_path = $this->file_joinPaths( $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'SKIN_BASE_DIRECTORY' ], strtolower( $skin_directory ), "/config.json" );
 
 
@@ -2210,13 +2344,37 @@ class DowncastBase   {
 
 
 
-}
+
+
+
+
+
+
+
+    }
 
     /**
      * Load Plugins ( internal ) 
      *
      * Instantiates Each Plugin and Assigns to a Tracking Array in $this
-     *
+     * Configuration may be a string like this :
+     * 
+      "PLUGINS": [
+      "SharedScripts",
+      "ViewSource",
+      "Forms",
+      "DemoForms"
+      ]
+     * or an array like this : 
+      "PLUGINS": [
+      "SharedScripts",
+      "ViewSource",
+      "Forms",
+      {
+      "active": true,
+      "id": "DemoForms"
+      }
+      ]
      * @param none
      * @return void
      */
@@ -2224,14 +2382,23 @@ class DowncastBase   {
 
         $plugins = $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'PLUGINS' ];
         $load_failed = false;
-        foreach ( $plugins as $key => $plugin_unique_id ) {
+        foreach ( $plugins as $plugin_unique_id => $plugin_properties ) {
+
+
+            if ( isset( $plugin_properties[ 'active' ] ) && (!$plugin_properties[ 'active' ]) ) {
+                continue;
+}
+
+
+
             if ( !isset( $this->_plugins[ $plugin_unique_id ] ) ) {
+
 
                 $plugin_file_path = $this->file_joinPaths( "plugins/", $plugin_unique_id, $plugin_unique_id . ".php" );
                 $plugin_configuration_file = $this->file_joinPaths( "plugins/", $plugin_unique_id, "config.json" );
                 if ( (!file_exists( $plugin_file_path )) || (!file_exists( $plugin_configuration_file )) ) {
                     $load_failed = true;
-            }
+}
 
                 @include_once($plugin_file_path);
 
@@ -2239,7 +2406,7 @@ class DowncastBase   {
                     $load_failed = true;
 
 
-                    }
+}
 
                 if ( $load_failed ){
 
@@ -2250,9 +2417,9 @@ class DowncastBase   {
                     $this->debugLogError( $error_title, $error_details );
 
                     $load_failed = false; //reset for next plugin load
-                    } else {
+} else {
                     $this->_plugins[ $plugin_unique_id ] = new $plugin_unique_id( $this ); //instantiate the plugin object and assign to $this->_plugins
-                    }
+}
 
 
 }
@@ -2391,7 +2558,7 @@ class DowncastBase   {
 }
 
         $this->debugLog( '$this->CONTENT_TAGS = ', $this->CONTENT_TAGS, true, false );
-}
+    }
 
     /**
      * Add Content Tags
@@ -2412,7 +2579,7 @@ class DowncastBase   {
 }
 
 
-}
+    }
 
     /**
      * Add Embed Tags
@@ -2422,7 +2589,7 @@ class DowncastBase   {
      * @param $tags array An array of tag names and tag values consisting of the path to the file to be read
      * @return void
      */
-    public function addEmbedTags( $tags) {
+    public function addEmbedTags( $tags ) {
 
         /*
          * force array to prevent foreach errors
@@ -2433,17 +2600,17 @@ class DowncastBase   {
 }
 
 
-}
+    }
 
     /**
      * Add Skin CSS and Javascript
      *
      * Returns Skin's CSS and Javascript as HTML LINK tags
-     *
+     * @deprecated
      * @param none
      * @return void
      */
-    private function _getSkinCssAndJs() {
+    private function _getSkinCssAndJsOLD12_9_2014() {
         /*
          * Initialize
          */
@@ -2454,6 +2621,7 @@ class DowncastBase   {
         $css_inline = '';
         $result[ 'js_inline' ] = '';
         $result[ 'js_links' ] = '';
+        $result[ 'js_head' ] = '';
         $result[ 'css_inline' ] = '';
         $result[ 'css_links' ] = '';
         /*
@@ -2520,6 +2688,14 @@ class DowncastBase   {
             );
 
 
+            $resource_array = (isset( $skin[ 'CONFIG' ][ 'JS_INLINE' ] )) ? $skin[ 'CONFIG' ][ 'JS_HEAD' ] : array();
+
+            $js_head .=$this->_implodeResourceArray(
+                    $skin_relative_path, //The relative path from Downcast root to the resource directory
+                    $resource_array, //The array containing the names of the resource files
+                    false, //$css True if the resource is css, false if script
+                    false  //$inline True for inline, false to return as resource links 
+            );
 
 
 }//end SKINs Loop
@@ -2532,20 +2708,20 @@ class DowncastBase   {
 
         $result[ 'js_links' ] = $js_links;
         $result[ 'js_inline' ] = $js_inline;
-
+        $result[ 'js_head' ] = $js_head;
 
         return $result;
     }
 
     /**
-     * Add Plugin CSS and Javascript
+     * Get Resource Tag Content
      *
      * Returns Plugin's CSS and Javascript as HTML LINK tags
      *
      * @param none
      * @return void
      */
-    private function _getPluginCssAndJs() {
+    private function _getResourceTagContent( $extensions, $extensions_relative_path_prefix = null ) {
         /*
          * Initialize
          */
@@ -2558,90 +2734,68 @@ class DowncastBase   {
         $result[ 'js_links' ] = '';
         $result[ 'css_inline' ] = '';
         $result[ 'css_links' ] = '';
-        /*
-         * Find Skin Array
-         */
-        if ( isset( $this->CONFIG[ 'PLUGIN' ] ) ) {
-            $array_plugin = $this->CONFIG[ 'PLUGIN' ];
-} else {
-            /*
-             * return empty strings if no SKIN loaded
-             */
-            return $result;
-}
+        $result[ 'js_footer_links' ] = '';
+        $result[ 'js_footer_inline' ] = '';
 
 
 
-
-        /*
-         * Force it to be an array to avoid errors when passed a string
-         */
-        if ( !is_array( $array_plugin ) ) {
-            $array_plugin = array( $array_plugin );
-}
         /*
          * Iterate through each plugin and concatenate their css paths
          */
-        foreach ( $array_plugin as $_plugin_relative_path => $plugin ) {
+        foreach ( $extensions as $_extension_relative_path => $extension ) {
 
-            $plugin_relative_path = "/plugins/" . $_plugin_relative_path;
+//  $plugin_relative_path = "/plugins/" . $_plugin_relative_path;
+            $extension_relative_path = $extensions_relative_path_prefix . $_extension_relative_path;
 
 
+            $resource_array = (isset( $extension[ 'CONFIG' ][ 'CSS' ] )) ? $extension[ 'CONFIG' ][ 'CSS' ] : array();
 
-            $resource_array = (isset( $plugin[ 'CONFIG' ][ 'CSS' ] )) ? $plugin[ 'CONFIG' ][ 'CSS' ] : array();
-            $css_links .=$this->_implodeResourceArray(
-                    $plugin_relative_path, //The relative path from Downcast root to the resource directory
+
+            $resources = $this->_implodeResourceArray2(
+                    $extension_relative_path, //The relative path from Downcast root to the resource directory
                     $resource_array, //The array containing the names of the resource files
-                    true, //$css True if the resource is css, false if script
-                    false //$inline True for inline, false to return as resource links                      
+                    true //$css True if the resource is css, false if script
             );
 
 
+            $css_inline .=$resources[ 'css_inline' ];
+            $css_links .=$resources[ 'css_links' ];
+            unset( $resources );
 
 
+            $resource_array = (isset( $extension[ 'CONFIG' ][ 'JS' ] )) ? $extension[ 'CONFIG' ][ 'JS' ] : array();
 
-            $resource_array = (isset( $plugin[ 'CONFIG' ][ 'CSS_INLINE' ] )) ? $plugin[ 'CONFIG' ][ 'CSS_INLINE' ] : array();
 
-
-            $css_inline .=$this->_implodeResourceArray(
-                    $plugin_relative_path, //The relative path from Downcast root to the resource directory
+            $resources = $this->_implodeResourceArray2(
+                    $extension_relative_path, //The relative path from Downcast root to the resource directory
                     $resource_array, //The array containing the names of the resource files
-                    true, //$css True if the resource is css, false if script
-                    $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'CSS_INLINE_ENABLED' ] //$inline True for inline, false to return as resource links 
+                    false //$css True if the resource is css, false if script
             );
 
-            $resource_array = (isset( $plugin[ 'CONFIG' ][ 'JS' ] )) ? $plugin[ 'CONFIG' ][ 'JS' ] : array();
-
-            $js_links .=$this->_implodeResourceArray(
-                    $plugin_relative_path, //The relative path from Downcast root to the resource directory
-                    $resource_array, //The array containing the names of the resource files
-                    false, //$css True if the resource is css, false if script
-                    false //$inline True for inline, false to return as resource links 
-            );
-
-
-            $resource_array = (isset( $plugin[ 'CONFIG' ][ 'JS_INLINE' ] )) ? $plugin[ 'CONFIG' ][ 'JS_INLINE' ] : array();
-
-            $js_inline .=$this->_implodeResourceArray(
-                    $plugin_relative_path, //The relative path from Downcast root to the resource directory
-                    $resource_array, //The array containing the names of the resource files
-                    false, //$css True if the resource is css, false if script
-                    $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'JS_INLINE_ENABLED' ]  //$inline True for inline, false to return as resource links 
-            );
+            $js_footer_links .=$resources[ 'js_footer_links' ];
+            $js_footer_inline .=$resources[ 'js_footer_inline' ];
+            $js_inline .=$resources[ 'js_inline' ];
+            $js_links .=$resources[ 'js_links' ];
+            unset( $resources );
 
 
 
 
-}//end SKINs Loop
+}//end plugin loop
 
 
 
+        $result[ 'js_footer_links' ] = $js_footer_links;
+        $result[ 'js_footer_inline' ] = $js_footer_inline;
 
         $result[ 'css_links' ] = $css_links;
         $result[ 'css_inline' ] = $css_inline;
 
         $result[ 'js_links' ] = $js_links;
         $result[ 'js_inline' ] = $js_inline;
+
+
+
 
         return $result;
     }
@@ -2700,7 +2854,7 @@ class DowncastBase   {
 
 }
 
-               }
+}
 
 
             /*
@@ -2723,9 +2877,9 @@ class DowncastBase   {
 
 
 }
-        }
+}
 
-        }
+}
 
         $result[ 'css' ] = $css;
         $result[ 'js' ] = $js;
@@ -2737,7 +2891,7 @@ class DowncastBase   {
 
 
         return $result;
-       }
+    }
 
     /**
      * Add Css and Script Tags
@@ -2763,43 +2917,100 @@ class DowncastBase   {
          */
 
         $this->doActionHooks( 'dc_skin_resources' );
-        $skin_links = $this->_getSkinCssAndJs();
 
-        $css_links .=$skin_links[ 'css_links' ];
-        $css_inline .=$skin_links[ 'css_inline' ];
-        $js_links .=$skin_links[ 'js_links' ];
-        $js_inline .=$skin_links[ 'js_inline' ];
+        /*
+         * First, ensure that we have a valid skin array
+         */
+
+        $this->CONFIG[ 'SKIN' ] = ( isset( $this->CONFIG[ 'SKIN' ] ) && (is_array( $this->CONFIG[ 'SKIN' ] )) ) ? $this->CONFIG[ 'SKIN' ] : array();
+
+
+        /*
+         * Then get resources
+         */
+
+        $skin_resources = $this->_getResourceTagContent(
+                $this->CONFIG[ 'SKIN' ], //$extensions array
+                null //$extensions_relative_path_prefix
+        );
+        $css_links .=$skin_resources[ 'css_links' ];
+        $css_inline .=$skin_resources[ 'css_inline' ];
+        $js_links .=$skin_resources[ 'js_links' ];
+        $js_inline .=$skin_resources[ 'js_inline' ];
+        $js_footer_links.= $skin_resources[ 'js_footer_links' ];
+        $js_footer_inline.=$skin_resources[ 'js_footer_inline' ];
+
 
         /*
          * Get the Plugin CSS and Scripts
          */
+        /*
+         * First, ensure that we have a valid plugin array
+         */
 
-        $plugin_links = $this->_getPluginCssAndJs();
+        $this->CONFIG[ 'PLUGIN' ] = ( isset( $this->CONFIG[ 'PLUGIN' ] ) && (is_array( $this->CONFIG[ 'PLUGIN' ] )) ) ? $this->CONFIG[ 'PLUGIN' ] : array();
 
-        $css_links .=$plugin_links[ 'css_links' ];
-        $css_inline .=$plugin_links[ 'css_inline' ];
-        $js_links .=$plugin_links[ 'js_links' ];
-        $js_inline .=$plugin_links[ 'js_inline' ];
 
+        /*
+         * Then get resources
+         */
+
+        $plugin_resources = $this->_getResourceTagContent(
+                $this->CONFIG[ 'PLUGIN' ], //$extensions array
+                '/plugins/' //$extensions_relative_path_prefix
+        );
+        $css_links .=$plugin_resources[ 'css_links' ];
+        $css_inline .=$plugin_resources[ 'css_inline' ];
+        $js_links .=$plugin_resources[ 'js_links' ];
+        $js_inline .=$plugin_resources[ 'js_inline' ];
+        $js_footer_links.= $plugin_resources[ 'js_footer_links' ];
+        $js_footer_inline.=$plugin_resources[ 'js_footer_inline' ];
 
 
 
 
         $css_tag_content = $css_links . $css_inline;
         $js_tag_content = $js_links . ($js_inline); //encode is necessary to escape javascript
-        $js_tag_content_encoded = $js_links . $js_inline; //encode is necessary to escape javascript
+
+        $js_footer_tag_content = $js_footer_links . ($js_footer_inline);
+
+        //      $js_tag_content_encoded = $js_links . $js_inline; //encode is necessary to escape javascript
         //  echo ($js_tag_content_encoded);
         // $this->debugLog( 'stop = ', stop, true, true );
 //        $this->debugLog( '$js_tag_content = ', $js_tag_content, true, true );
 
         $this->addContentTag( 'CSS', $css_tag_content );
         $this->addContentTag( 'JS', $js_tag_content );
+        $this->addContentTag( 'JS_FOOTER', $js_footer_tag_content );
+        $this->addTagFilter( 'JS_FOOTER', array( $this, '_addScriptVars' ) );
 
 
 
 
+        }
 
-    }
+    /**
+     * Add Script Variables (Private)
+     *
+     * Adds Local Javascript variables to Javascript Footer
+     *
+     * @param none
+     * @return void
+     */
+    private function _addScriptVars( $tag_name, $content ) {
+
+
+        $vars_string = json_encode( $this->getScriptVars() );
+
+
+        $local_vars_script = '<script type="text/javascript">
+
+            var Downcast =' . $vars_string . '
+                    </script>';
+
+        $content.=$local_vars_script;
+        return $content;
+        }
 
     /**
      * Log Error Message
@@ -2842,8 +3053,8 @@ class DowncastBase   {
      * @param $filter string A unique string that will be used to filter debug message requests
      * @return void
      */
-    public function debugAddFilter( $filter ) {
-
+    public function debugAddFilter( $filter, $enabled = true ) {
+        if ( !$enabled ){ return; }
         $this->_debug_filters[] = $filter;
     }
 
@@ -2981,7 +3192,7 @@ class DowncastBase   {
     /**
      * Get Real Path ( File Library)
      *
-     * 
+     * Returns false if the file exists, or the full absolute path to the file if it exists. 
      * Does exactly the same as realpath except  by default it does not resolve symbolic links and ../ type paths
      * This is for security reasons. If you want to override this, and use realpath, set safe=false;
      * 
@@ -2994,22 +3205,34 @@ class DowncastBase   {
      */
     public function file_getRealPath( $path, $safe = true ) {
 
+
+
+
         /*
          * Use realpath only if safe is false.
          */
         if ( $safe === true ){
-
-            $abs_file_path = $this->file_joinPaths( $this->getRootDirectory(), $path );
-
+            $path = $this->file_convertToForwardSlashes( $path );
 
 
+            if ( stripos( $path, $this->getRootDirectory() ) === false ) {
 
-            if ( file_exists( $abs_file_path ) ) {
 
-                $result = $abs_file_path;
+                $path = $this->file_joinPaths( $this->getRootDirectory(), $path );
+
+}
+
+
+
+            if ( file_exists( $path ) ) {
+
+                $result = $path;
 
 } else {
+
+
                 $result = false;
+
 }
 
    } else {
@@ -3041,6 +3264,101 @@ class DowncastBase   {
    }
 
     /**
+     * Get Relative Path (File Library)
+     *
+     * Returns the relative path to the root directory
+     *
+     * @param string $path Any path
+     * @return string The relative path of the file from the root directory with leading slashs
+     */
+    public function file_getRelativePath( $path ) {
+
+        $path = $this->file_convertToForwardSlashes( $path );
+        if ( stripos( $path, $this->getRootDirectory() ) !== false ) {
+
+
+            $result = $this->addLeadingSlash( str_replace( $this->getRootDirectory(), '', $path ) );
+
+} else {
+            $result = $this->addLeadingSlash( $path );
+}
+        return $result;
+
+    }
+
+    /**
+     * Implode Resource
+     *
+     * Converts a resource path into a string containining inline css or js, or resource links
+     *
+     * 
+     * @param $path string The path to the resource
+     * @param $css bool True if the resource is css, false if script
+     * @param $inline bool True if you want the resources returned as inline, false to return as resource links 
+     * @return string A concatenated string containing the resources either as inline <style></style> and <script></script> tags or linked resource
+     */
+    private function _implodeResource( $resource_relative_path, $path, $css = true, $inline = false ) {
+        //initialize
+        $string = '';
+
+
+
+        /*
+         * Check for External URLs and Use Link Form regardleess of $inline setting
+         */
+        if ( preg_match( '/^http/', $path, $matches ) ){
+            if ( $css ) {
+                $string .="\n<link href=\"$path\" rel=\"stylesheet\">";
+} else {
+                $string.="\n<script type=\"text/javascript\" src=\"$path\"></script>";
+}
+
+
+} else
+        /*
+         * If Not an external url, check $inline setting and add Inline or Link form depending on setting
+         */
+
+    {
+            $link = $this->addLeadingSlash( $this->file_joinPaths( $resource_relative_path, $path ) );
+            if ( $inline ){
+                /*
+                 * If Inline, read the file and add to the result string
+                 */
+                if ( $css ) {
+                    $string.= "\n<style>" . file_get_contents( $this->file_getRealPath( $link ) ) . '</style>';
+  } else {
+                    $string.= "\n<script type=\"text/javascript\" >" . file_get_contents( $this->file_getRealPath( $link ) ) . '</script>';
+  }
+} else {
+                /*
+                 * 
+                 * If Not Inline and Not External, 
+                 * then just link to it
+                 * 
+
+                 */
+
+
+                if ( $css ) {
+                    $string .="\n<link href=\"$link\" rel=\"stylesheet\">";
+} else {
+                    $string.="\n<script type=\"text/javascript\" src=\"$link\"></script>";
+
+}
+
+
+
+
+}
+
+    }
+
+
+        return $string;
+ }
+
+    /**
      * Implode Resource Array
      *
      * Converts a resource array into a string containining inline css or js, or resource links
@@ -3048,7 +3366,7 @@ class DowncastBase   {
      * 
      * Usage:
      * $inline_js=$this->_implodeResourceArray('/js/',$js_inline_array,false,false);
-     * 
+     * @see _implodeResource
      * @param $resource_relative_path string The relative path from Downcast root to the resource directory containing the resource
      * @param $resource_array The array containing the names of the resource files
      * @param $css bool True if the resource is css, false if script
@@ -3076,49 +3394,49 @@ class DowncastBase   {
          */
 
         foreach ( $resource_array as $key => $path ) {
+            if ( false ){
 
-
-            /*
-             * Check for External URLs and Use Link Form regardleess of $inline setting
-             */
-            if ( preg_match( '/^http/', $path, $matches ) ){
-                if ( $css ) {
-                    $string .="\n<link href=\"$path\" rel=\"stylesheet\">";
+                /*
+                 * Check for External URLs and Use Link Form regardleess of $inline setting
+                 */
+                if ( preg_match( '/^http/', $path, $matches ) ){
+                    if ( $css ) {
+                        $string .="\n<link href=\"$path\" rel=\"stylesheet\">";
 } else {
-                    $string.="\n<script type=\"text/javascript\" src=\"$path\"></script>";
+                        $string.="\n<script type=\"text/javascript\" src=\"$path\"></script>";
 }
 
 
 } else
-            /*
-             * If Not an external url, check $inline setting and add Inline or Link form depending on setting
-             */
+                /*
+                 * If Not an external url, check $inline setting and add Inline or Link form depending on setting
+                 */
 
     {
-                $link = $this->addLeadingSlash( $this->file_joinPaths( $resource_relative_path, $path ) );
-                if ( $inline ){
-                    /*
-                     * If Inline, read the file and add to the result string
-                     */
-                    if ( $css ) {
-                        $string.= "\n<style>" . file_get_contents( $this->file_getRealPath( $link ) ) . '</style>';
+                    $link = $this->addLeadingSlash( $this->file_joinPaths( $resource_relative_path, $path ) );
+                    if ( $inline ){
+                        /*
+                         * If Inline, read the file and add to the result string
+                         */
+                        if ( $css ) {
+                            $string.= "\n<style>" . file_get_contents( $this->file_getRealPath( $link ) ) . '</style>';
   } else {
-                        $string.= "\n<script type=\"text/javascript\" >" . file_get_contents( $this->file_getRealPath( $link ) ) . '</script>';
+                            $string.= "\n<script type=\"text/javascript\" >" . file_get_contents( $this->file_getRealPath( $link ) ) . '</script>';
   }
 } else {
-                    /*
-                     * 
-                     * If Not Inline and Not External, 
-                     * then just link to it
-                     * 
+                        /*
+                         * 
+                         * If Not Inline and Not External, 
+                         * then just link to it
+                         * 
 
-                     */
+                         */
 
 
-                    if ( $css ) {
-                        $string .="\n<link href=\"$link\" rel=\"stylesheet\">";
+                        if ( $css ) {
+                            $string .="\n<link href=\"$link\" rel=\"stylesheet\">";
 } else {
-                        $string.="\n<script type=\"text/javascript\" src=\"$link\"></script>";
+                            $string.="\n<script type=\"text/javascript\" src=\"$link\"></script>";
 
 }
 
@@ -3128,9 +3446,125 @@ class DowncastBase   {
 }
 
     }
+}
+            $string = $this->_implodeResource( $resource_relative_path, $path, $css, $inline );
+}
+
+
+        return $string;
+    }
+
+    /**
+     * Implode Resource Array
+     *
+     * Converts a resource array into a string containining inline css or js, or resource links
+     *
+     * 
+     * Usage:
+     * $inline_js=$this->_implodeResourceArray('/js/',$js_inline_array,false,false);
+     * @see _implodeResource
+     * @param $resource_relative_path string The relative path from Downcast root to the resource directory containing the resource
+     * @param $resource_array The array containing the names of the resource files
+     * @param $css bool True if the resource is css, false if script
+     * @return string A concatenated string containing the resources either as inline <style></style> and <script></script> tags or linked resources
+     */
+    private function _implodeResourceArray2( $resource_relative_path, $resource_array, $css = true ) {
+        //initialize
+        $string = '';
+
+        /*
+         * Force array to avoid errors when passed a string
+         */
+        if ( !is_array( $resource_array ) ) {
+            $resource_array = array( $resource_array );
+}
+
+        /*
+         * Iterate Array
+         * 
+         * e.g.:
+         * 0=>"css/bootstrap.min.css"
+         * 1=>"css/bootstrap-responsive.min.css"
+         * 3=>"http://example.com/css/bootstrap-responsive.min.css"
+         */
+
+
+        foreach ( $resource_array as $key => $resource ) {
+
+            /*
+             * set defaults in case one of the resource attributes arent set
+             */
+
+            $resource[ 'id' ] = isset( $resource[ 'id' ] ) ? $resource[ 'id' ] : $resource[ 'path' ];
+            $resource[ 'active' ] = isset( $resource[ 'active' ] ) ? $resource[ 'active' ] : $resource[ 'active' ];
+            $resource[ 'inline' ] = isset( $resource[ 'inline' ] ) ? $resource[ 'inline' ] : false;
+            $resource[ 'footer' ] = isset( $resource[ 'footer' ] ) ? $resource[ 'footer' ] : false;
+
+            /*
+             * Exclude Inactive Resources
+             */
+            if ( !$resource[ 'active' ] ) { continue; }
+
+
+            if ( $css ){
+                /*
+                 * Make Inline only if Global Config Inline is true
+                 */
+
+                $resource[ 'inline' ] = $resource[ 'inline' ] && $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'CSS_INLINE_ENABLED' ];
+                /*
+                 * get resource string
+                 */
+                $resource_string = $this->_implodeResource
+                        (
+                        $resource_relative_path, //relative path to config.json
+                        $resource[ 'path' ], //path
+                        $css, //true if css
+                        $resource[ 'inline' ] //inline
+                );
+
+                $css_inline .= ($resource[ 'inline' ] ) ? $resource_string : '';
+                $css_links .= ($resource[ 'inline' ] ) ? '' : $resource_string;
+        } else{
+                /*
+                 * Make Inline only if Global Config Inline is true
+                 */
+
+                $resource[ 'inline' ] = $resource[ 'inline' ] && $this->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'JS_INLINE_ENABLED' ];
+
+                /*
+                 * get resource string
+                 */
+
+                $resource_string = $this->_implodeResource
+                        (
+                        $resource_relative_path, //relative path to config.json
+                        $resource[ 'path' ], //path
+                        $css, //true if css
+                        $resource[ 'inline' ] //inline
+                );
+                if ( $resource[ 'footer' ] ) {
+
+
+                    $js_footer_inline .= ($resource[ 'inline' ] ) ? $resource_string : '';
+                    $js_footer_links .= ($resource[ 'inline' ] ) ? '' : $resource_string;
+
+} else  { // if not a footer resource
+                    $js_inline .= ($resource[ 'inline' ] ) ? $resource_string : '';
+                    $js_links .= ($resource[ 'inline' ] ) ? '' : $resource_string;
+
 
 }
-        return $string;
+        }
+}
+
+        $result[ 'js_footer_links' ] = $js_footer_links;
+        $result[ 'js_footer_inline' ] = $js_footer_inline;
+        $result[ 'js_inline' ] = $js_inline;
+        $result[ 'js_links' ] = $js_links;
+        $result[ 'css_inline' ] = $css_inline;
+        $result[ 'css_links' ] = $css_links;
+        return $result;
     }
 
     /**
@@ -3181,6 +3615,199 @@ class DowncastBase   {
 
     }
 
+    /**
+     * is Ajax      
+     *
+     * Determines if current request is ajax or not
+     *
+     * @param none
+     * @return bool True if Ajax request, false if not
+     */
+    public function isAjax() {
+
+        if ( isset( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) AND strtolower( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) === 'xmlhttprequest' ) {
+            return true;
+} else {
+
+            return false;
+
+}
+    }
+
+    private $_script_vars = null;
+
+    /**
+     * Set Script Variables
+     *
+     * Ports a variable to Javascript
+     * 
+     * 
+     * Normally, you should access this method through its wrapper methods, although it remains public for additional flexibility
+
+     * Examples
+
+      $vars[ 'Color']='blue';
+      Example 1: Access in Js using Downcast.plugins.MyForm.Color
+      setScriptVars( $vars, 'plugins', 'MyForm' );
+      Example 2: Access in Js using Downcast.options.Color
+      setScriptVars( $vars, 'options' );
+      Example 3: Access in Js using Downcast.Domain
+      $vars[  'Domain' ] = 'mysite.com';
+      setScriptVars( $vars );
+     * @param $vars array Any array whose element indexes are the variable names and the value is the variable value
+     * @param component The first tier property name that will hold the variable in the 'Downcast' global javascript variable. 
+     * @param component_name The second tier property name that will hold the variable in the 'Downcast' global javascript variable. 
+     * @return void
+     */
+    public function setScriptVars( $vars, $component = null, $component_name = null ) {
+
+
+
+        if ( !is_array( $this->_script_vars ) ) {
+            $this->_script_vars = array();
+}
+        if ( is_null( $component ) ) {
+
+            if ( is_null( $component_name ) ) {
+                $this->_script_vars = array_merge( $this->_script_vars, $vars );
+
+                //setVars:
+                {
+                    if ( isset( $this->_script_vars[ $component ] ) ) {
+                        $this->_script_vars = $vars;
+} else {
+                        $this->_script_vars = array_merge( $this->_script_vars, $vars );
+}
+                }
+
+
+}
+} else
+    {
+            if ( is_null( $component_name ) ) {
+
+                // setComponentVars:
+                {
+
+
+                    if ( isset( $this->_script_vars[ $component ] ) ) {
+                        $this->_script_vars[ $component ] = array_merge( $this->_script_vars[ $component ], $vars );
+} else {
+                        $this->_script_vars[ $component ] = $vars;
+}
+                }
+
+    } else
+            // setComponentComponentNameVars:
+            {
+
+                if ( isset( $this->_script_vars[ $component ][ $component_name ] ) ) {
+                    $this->_script_vars[ $component ][ $component_name ] = array_merge( $this->_script_vars[ $component ][ $component_name ], $vars );
+} else {
+                    $this->_script_vars[ $component ][ $component_name ] = $vars;
+}
+            }
+
+
+}
+
+
+
+
+   }
+
+    /**
+     * Get Script Variables
+     *
+     * Returns an array of variables held for porting to javascript
+     *
+     * @param none
+     * @return array
+     */
+    public function getScriptVars() {
+        if ( is_null( $this->_script_vars ) ) {
+            $this->_script_vars = array();
+}
+
+        return ($this->_script_vars);
+    }
+
+    /**
+     * Set Script Variable For Skin
+     *
+     * Ports a variable to javascript as a Downcast.skins.skin_name.var property
+     *
+     * @param none
+     * @return void
+     */
+    public function setSkinScriptVar( $skin_name, $var_name, $value )
+    {
+        $this->setScriptVars( array( $var_name => $value ), 'skins', $skin_name );
+
+
+    }
+
+    /**
+     * Set Script Variable For Plugin
+     *
+     * Ports a variable to javascript as a Downcast.plugins.plugin_name.var_name property
+     *
+     * @param string $plugin_name The plugin name
+     * @param string $var_name The name of the variable
+     * @param string $value The value of the variable
+     * 
+     * @return void
+     */
+    public function setPluginScriptVar( $plugin_name, $var_name, $value )
+    {
+        $this->setScriptVars( array( $var_name => $value ), 'plugins', $plugin_name );
+
+
+    }
+
+        public function setPluginScriptVarMaybe( $plugin_name, $var_name, $value )
+    {
+        $script_vars=$this->getScriptVars();
+        $existing_value=(isset($script_vars['plugins'][$plugin_name][$var_name]))?($plugin_script_vars=$script_vars['plugins'][$plugin_name][$var_name]):array();
+        if ( !is_array($existing_value)) {
+            $existing_value=array($existing_value);
+}
+        $this->debugLog( '$value = ', $value, true, false );
+        $this->debugLog( '$existing_value = ', $existing_value, true, false );
+
+
+        $this->setScriptVars( array( $var_name => array_merge($existing_value,$value) ), 'plugins', $plugin_name );
+
+
+    }
+
+    /**
+     * Set Script Variable For Site
+     *
+     * Ports a variable to javascript as a Downcast.skins.skin_name.var_name property
+     *
+     * @param string $var_name The name of the variable
+     * @param string $value The value of the variable
+     * 
+     */
+    public function setSiteScriptVar( $var_name, $value )
+{
+
+        $this->setScriptVars( array( $var_name => $value ) );
+
+}
+    /**
+     * screenDefaults
+     *
+     * Takes an array and takes only those elements whose indexes match one in the defaults array, then fills in any gaps with the default values
+     *
+     * @param array $defaults An associative array of default name/value pairs
+     * @param array $variables An associative array of name/value pairs
+     * @return array An array that has only the indexes that are listed in the defaults array and values that are supplied by either defaults or the provided $variables array
+     */
+public function screenDefaults( $defaults, $array ) {
+        return (array_intersect_key( array_merge( $defaults, $array ), $defaults ));
+    }
 }
 
 ?>

@@ -12,15 +12,76 @@ class DowncastCacheController{
      * To Override these settings, edit the config-cache.json file. s
      * 
      */
-    
+
     private static $_enabled = true;
     private static $_cleanup = false;
     private static $_timeout = 600;
     private static $_path = null;
     private static $_debug = false;
+    private static $_exceptions = array();
 
-    
-    
+    /**
+     * is Exception
+     *
+     * Returns whether the current url is excepted from caching
+     * Automatically excepts ajax, 
+     * @param none
+     * @return void
+     */
+    public function isException() {
+
+        /*
+         * Initialize
+         */
+        $url = $_SERVER[ 'REQUEST_URI' ];
+        $isException = false;
+        $is_on_exception_list = false;
+
+        $exception_patterns = self::$_exceptions; //read from config-config.json
+
+        /*
+         * Check all exception patterns
+         * Configured via config-cache.json
+         */
+
+        foreach ( $exception_patterns as $pattern )
+        {
+            if ( preg_match( '/' . $pattern . '/', $url ) )
+  {
+                $is_on_exception_list = true;
+
+  }
+        }
+
+        /*
+         * Check if POST or AJAX
+         */
+
+
+        $is_post = !empty( $_POST );
+        $is_Ajax = isset( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) AND strtolower( $_SERVER[ 'HTTP_X_REQUESTED_WITH' ] ) === 'xmlhttprequest';
+
+        /*
+         * Filter all
+         */
+        $isException = ($is_on_exception_list || $is_Ajax || $is_post) ? true : false;
+
+        if ( self::$_debug ){
+
+            $reason = ($is_Ajax) ? ' an ajax request ' : $reason;
+            $reason = ($is_post) ? ' a post ' : $reason;
+            $reason = ($is_on_exception_list) ? ' on exception list ' : $reason;
+
+            echo ($isException) ? '<br><br><br><div> Page will not be cached because its ' . $reason . '</div>' : '';
+        }
+
+
+
+        return $isException;
+
+
+    }
+
     /**
      * Is Enabled
      *
@@ -29,11 +90,23 @@ class DowncastCacheController{
      * @param none
      * @return bool True if enabled, False if disabled
      */
-    public static function isEnabled( ) {
+    public static function isEnabled() {
+        /*
+         * Check for exceptions, but otherwise return configured state
+         */
+
+        if ( self::isException() ) {
+            return false;
+} else {
+
             return self::$_enabled;
 
+}
+
+
+
     }
-    
+
     /**
      * Sets up Cache Configuration
      *
@@ -63,7 +136,7 @@ class DowncastCacheController{
         self::$_timeout = (isset( $config[ 'CACHE' ][ 'CONFIG' ][ 'TIMEOUT' ] )) ? $config[ 'CACHE' ][ 'CONFIG' ][ 'TIMEOUT' ] : self::$_timeout;
         self::$_path = (isset( $config[ 'CACHE' ][ 'CONFIG' ][ 'PATH' ] )) ? $config[ 'CACHE' ][ 'CONFIG' ][ 'PATH' ] : self::$_path;
         self::$_debug = (isset( $config[ 'CACHE' ][ 'CONFIG' ][ 'DEBUG' ] )) ? $config[ 'CACHE' ][ 'CONFIG' ][ 'DEBUG' ] : self::$_debug;
-
+        self::$_exceptions = (isset( $config[ 'CACHE' ][ 'CONFIG' ][ 'EXCEPTION_REGEX_PATTERNS' ] )) ? $config[ 'CACHE' ][ 'CONFIG' ][ 'EXCEPTION_REGEX_PATTERNS' ] : self::$_exceptions;
 
 
 
@@ -251,30 +324,53 @@ class DowncastCacheController{
          */
         include("lib/downcast/Downcast.php");
         include("lib/downcast/DowncastPlugin.php");
-
+        include("lib/downcast/DowncastTheme.php");
 
         /*
          * Create a new Downcast Object
          */
         $io = new Downcast( false );
-      
+
         $io->doActionHooks( 'dc_before_template' );
 
         /*
          * 
-         * Get the Template
-         * 
+         * Do not Use a Template for Ajax
+         *  
          */
- 
-       // $html=$io->renderFile( "templates/" . strtolower( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE' ] ) . "/index.php",false );
-         $html=$io->renderFile( $io->file_joinPaths(( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE_BASE_DIRECTORY' ]), strtolower( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE' ] ), strtolower( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE_FILE_NAME' ])),false );
-        echo $html;
+
+
+        if ( $io->isAjax() ) {
+            echo $io->EMBED_TAGS[ 'CONTENT' ];
+            exit();
+}
+
+/*
+ * Direct all other requests to the template
+ */
+
+        // $html=$io->renderFile( "templates/" . strtolower( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE' ] ) . "/index.php",false );
+        $template_file = $io->file_joinPaths( ( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE_BASE_DIRECTORY' ] ), strtolower( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE' ] ), strtolower( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE_FILE_NAME' ] ) );
+        //$template_file= $io->file_getRealPath($_template_file);
+        //  $template_file=$io->file_getRealPath($template_file);
+//$io->debugLog( '$_template_file = ', $_template_file, true, false );
+        // $io->debugLog( '$template_file = ', $template_file, true, true );
+        // echo $io->renderFile( $template_file, false );
+
+        echo $io->renderFile(
+                $io->file_joinPaths( ( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE_BASE_DIRECTORY' ] ), strtolower( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE' ] ), strtolower( $io->CONFIG[ 'SITE' ][ 'CONFIG' ][ 'TEMPLATE_FILE_NAME' ] ) )
+                , false
+        );
+
+
+        //  echo $html;
         $io->doActionHooks( 'dc_after_template' );
         $io->doActionHooks( 'dc_controller_end' );
 
 
 
-
     }
+
 }
+
 ?>

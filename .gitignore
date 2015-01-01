@@ -1,3 +1,10 @@
 /content-bootdown
 /nbproject
 /cache
+/plugins/Forms/PFBC
+!/plugins/Forms/PFBC/Form.php
+View
+Element
+ErrorView
+Resources
+Validation

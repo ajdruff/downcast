@@ -611,7 +611,7 @@ class Bootdown_Markdown_Parser {
     function doHorizontalRules( $text ) {
 
 
-        
+
 
         # Do Horizontal Rules:
         return preg_replace(
@@ -661,7 +661,7 @@ class Bootdown_Markdown_Parser {
 
     function doHardBreaks( $text ) {
 
-        
+
 
 
         # Do hard breaks:
@@ -674,7 +674,7 @@ class Bootdown_Markdown_Parser {
 
     function doAnchors( $text ) {
 
-        
+
 
 
         #
@@ -806,7 +806,7 @@ class Bootdown_Markdown_Parser {
 
     function doImages( $text ) {
 
-        
+
 
 
         #
@@ -910,7 +910,7 @@ class Bootdown_Markdown_Parser {
 
     function doHeaders( $text ) {
 
-        
+
 
 
         # Setext-style headers:
@@ -959,7 +959,7 @@ class Bootdown_Markdown_Parser {
 
     function doLists( $text ) {
 
-        
+
         #
         # Form HTML ordered (numbered) and unordered (bulleted) lists.
         #
@@ -1035,8 +1035,8 @@ class Bootdown_Markdown_Parser {
          */
         $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'ul', $list );
         $list = $this->bootdown()->getText();
-        
-       
+
+
 
 
         $list_type = preg_match( "/$marker_ul_re/", $matches[ 4 ] ) ? "ul" : "ol";
@@ -1121,10 +1121,10 @@ class Bootdown_Markdown_Parser {
         $leading_space = & $matches[ 2 ];
         $marker_space = $matches[ 3 ];
         $tailing_blank_line = & $matches[ 5 ];
- 
 
- 
-        
+
+
+
 
 
         if ( $leading_line || $tailing_blank_line ||
@@ -1141,12 +1141,12 @@ class Bootdown_Markdown_Parser {
                 }
 
 
-       /*
+        /*
          * Add Bootdown Attributes
          */
         $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'li', $item );
         $item = $this->bootdown()->getText();
-        
+
 
 
 
@@ -1159,7 +1159,7 @@ class Bootdown_Markdown_Parser {
 
     function doCodeBlocks( $text ) {
 
-        
+
 
 
         #
@@ -1282,21 +1282,21 @@ class Bootdown_Markdown_Parser {
                     # Three-char closing marker, close em and strong.
                     array_shift( $token_stack );
                     $span = array_shift( $text_stack );
-                    
-      
-                    
-                    
+
+
+
+
                     $span = $this->runSpanGamut( $span );
-                    
-                                                /*
-         * Add Bootdown Attributes
-                                                 * Need to add immediately after runSpamGamut so its prioritized with list styling correctly
-         */
-        $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'span', $span );
-        $span = $this->bootdown()->getText();
-  
-                    
-                    
+
+                    /*
+                     * Add Bootdown Attributes
+                     * Need to add immediately after runSpamGamut so its prioritized with list styling correctly
+                     */
+                    $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'span', $span );
+                    $span = $this->bootdown()->getText();
+
+
+
                     $span = "<strong ><em $bootdown_attributes>$span</em></strong>";
                     $text_stack[ 0 ] .= $this->hashPart( $span );
                     $em = '';
@@ -1307,15 +1307,15 @@ class Bootdown_Markdown_Parser {
                     $token_stack[ 0 ] = str_repeat( $token{0}, 3 - $token_len );
                     $tag = $token_len == 2 ? "strong" : "em";
                     $span = $text_stack[ 0 ];
-                                    
-                    
+
+
                     $span = $this->runSpanGamut( $span );
-                    
-                                                /*
-         * Add Bootdown Attributes
-         */
-        $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'span', $span );
-        $span = $this->bootdown()->getText();
+
+                    /*
+                     * Add Bootdown Attributes
+                     */
+                    $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'span', $span );
+                    $span = $this->bootdown()->getText();
                     $span = "<$tag>$span</$tag>";
                     $text_stack[ 0 ] = $this->hashPart( $span );
                     $$tag = ''; # $$tag stands for $em or $strong
@@ -1330,15 +1330,15 @@ class Bootdown_Markdown_Parser {
                         $tag = strlen( $shifted_token ) == 2 ? "strong" : "em";
                         $span = array_shift( $text_stack );
                         $span = $this->runSpanGamut( $span );
-                        
-                                                    /*
-         * Add Bootdown Attributes
-         */
-        $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'span', $span );
-        $span = $this->bootdown()->getText();
-  
-        
-        
+
+                        /*
+                         * Add Bootdown Attributes
+                         */
+                        $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'span', $span );
+                        $span = $this->bootdown()->getText();
+
+
+
                         $span = "<$tag $bootdown_attributes>$span</$tag>";
                         $text_stack[ 0 ] .= $this->hashPart( $span );
                         $$tag = ''; # $$tag stands for $em or $strong
@@ -1363,15 +1363,15 @@ class Bootdown_Markdown_Parser {
                     array_shift( $token_stack );
                     $span = array_shift( $text_stack );
                     $span = $this->runSpanGamut( $span );
-                    
-                                                /*
-         * Add Bootdown Attributes
-         */
-        $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'span', $span );
-        $span = $this->bootdown()->getText();
-  
-                    
-                    
+
+                    /*
+                     * Add Bootdown Attributes
+                     */
+                    $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'span', $span );
+                    $span = $this->bootdown()->getText();
+
+
+
                     $span = "<strong $bootdown_attributes>$span</strong>";
                     $text_stack[ 0 ] .= $this->hashPart( $span );
                     $strong = '';
@@ -1388,15 +1388,15 @@ class Bootdown_Markdown_Parser {
                         array_shift( $token_stack );
                         $span = array_shift( $text_stack );
                         $span = $this->runSpanGamut( $span );
-                        
-                                                    /*
-         * Add Bootdown Attributes
-         */
-        $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'span', $span );
-        $span = $this->bootdown()->getText();
-  
-        
-        
+
+                        /*
+                         * Add Bootdown Attributes
+                         */
+                        $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'span', $span );
+                        $span = $this->bootdown()->getText();
+
+
+
                         $span = "<em $bootdown_attributes>$span</em>";
                         $text_stack[ 0 ] .= $this->hashPart( $span );
                         $em = '';
@@ -1415,7 +1415,7 @@ class Bootdown_Markdown_Parser {
 
     function doBlockQuotes( $text ) {
 
-        
+
 
         $text = preg_replace_callback( '/
 			  (								# Wrap whole match in $1
@@ -1450,9 +1450,9 @@ class Bootdown_Markdown_Parser {
          */
         $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'blockquote', $bq );
         $bq = $this->bootdown()->getText();
-        
-        
-        
+
+
+
         return "\n" . $this->hashBlock(
                         "<blockquote $bootdown_attributes>\n$bq\n</blockquote>"
                 ) . "\n\n";
@@ -1488,12 +1488,12 @@ class Bootdown_Markdown_Parser {
             if ( !preg_match( '/^B\x1A[0-9]+B$/', $value ) ) {
                 # Is a paragraph.
                 $value = $this->runSpanGamut( $value );
-                
-                
 
-                
-                
-                
+
+
+
+
+
                 $value = preg_replace( '/^([ ]*)/', "<p>", $value );
                 $value .= "</p>";
                 $grafs[ $key ] = $this->unhash( $value );
@@ -1577,7 +1577,7 @@ class Bootdown_Markdown_Parser {
 
     function doAutoLinks( $text ) {
 
-        
+
 
         $text = preg_replace_callback( '{<((https?|ftp|dict):[^\'">\s]+)>}i', array( &$this, '_doAutoLinks_url_callback' ), $text );
 
@@ -1924,6 +1924,7 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
 
     ### Extra Attribute Parser ###
     # Expression to use to catch attributes (includes the braces)
+
     var $id_class_attr_catch_re = '\{((?:[ ]*[#.][-_:a-zA-Z0-9]+){1,})[ ]*\}';
     # Expression to use when parsing in a context when no capture is desired
     var $id_class_attr_nocatch_re = '\{(?:[ ]*[#.][-_:a-zA-Z0-9]+){1,}[ ]*\}';
@@ -1939,7 +1940,7 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
             return "";
 
         # Split on components
-        preg_match_all(  '/[#.][-_:a-zA-Z0-9]+/', $attr, $matches );
+        preg_match_all( '/[#.][-_:a-zA-Z0-9]+/', $attr, $matches );
         $elements = $matches[ 0 ];
 
         # handle classes and ids (only first id taken into account)
@@ -2494,7 +2495,7 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
     }
 
     function doAnchors( $text ) {
-        
+
 
         #
         # Turn Markdown link shortcuts into XHTML <a> tags.
@@ -2578,7 +2579,7 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
 
 
 
-        
+
 
 
 
@@ -2605,15 +2606,15 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
                 $result .= $this->ref_attr[ $link_id ];
 
             $link_text = $this->runSpanGamut( $link_text );
-            
-            
-                            /*
-         * Add Bootdown Attributes
-         */
-        $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'a', $link_text );
-        $link_text = $this->bootdown()->getText();
-        $result .= $bootdown_attributes;
-            
+
+
+            /*
+             * Add Bootdown Attributes
+             */
+            $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'a', $link_text );
+            $link_text = $this->bootdown()->getText();
+            $result .= $bootdown_attributes;
+
             $result .= ">$link_text</a>";
             $result = $this->hashPart( $result );
                 }
@@ -2651,17 +2652,17 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
         $result .= $attr;
 
         $link_text = $this->runSpanGamut( $link_text );
-        
-        
-                /*
+
+
+        /*
          * Add Bootdown Attributes
          */
         $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'a', $link_text );
         $link_text = $this->bootdown()->getText();
         $result .= $bootdown_attributes;
 
-        
-        
+
+
         $result .= ">$link_text</a>";
 
         return $this->hashPart( $result );
@@ -2669,7 +2670,7 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
 
     function doImages( $text ) {
 
-        
+
 
         #
         # Turn Markdown image shortcuts into <img> tags.
@@ -2730,15 +2731,15 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
         $alt_text = $matches[ 2 ];
         $link_id = strtolower( $matches[ 3 ] );
 
-        
+
         /*
          * Add Bootdown Attributes
          */
         $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'img', $alt_text );
         $alt_text = $this->bootdown()->getText();
-        
-        
-        
+
+
+
         if ( $link_id == "" ) {
             $link_id = strtolower( $alt_text ); # for shortcut links like ![this][].
                 }
@@ -2796,7 +2797,7 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
 
     function doHeaders( $text ) {
 
-        
+
         #
         # Redefined to add id and class attribute support.
         #
@@ -2836,6 +2837,7 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
     }
 
     function _doHeaders_callback_setext( $matches ) {
+
         if ( $matches[ 3 ] == '-' && preg_match( '{^- }', $matches[ 1 ] ) )
             return $matches[ 0 ];
         $level = $matches[ 3 ]{0} == '=' ? 1 : 2;
@@ -2845,10 +2847,12 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
     }
 
     function _doHeaders_callback_atx( $matches ) {
+
         $level = strlen( $matches[ 1 ] );
         $attr = $this->doExtraAttributes( "h$level", $dummy = & $matches[ 3 ] );
         $block = "<h$level$attr>" . $this->runSpanGamut( $matches[ 2 ] ) . "</h$level>";
-        return "\n" . $this->hashBlock( $block ) . "\n\n";
+
+        return "\n" . $this->bootdown()->addAnchorTag( $this->runSpanGamut( $matches[ 2 ] ) ) . $this->hashBlock( $block ) . "\n\n";
     }
 
     function doTables( $text ) {
@@ -3012,7 +3016,7 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
     }
 
     function doDefLists( $text ) {
-        
+
         #
         # Form HTML definition lists.
         #
@@ -3242,15 +3246,15 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
             $is_p = !preg_match( '/^B\x1A[0-9]+B|^C\x1A[0-9]+C$/', $value );
 
             if ( $is_p ) {
-                
-                                                           /*
-         * Add Bootdown Attributes
-         */
-        $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'p', $value );
-        $value = $this->bootdown()->getText();
 
-                
-                
+                /*
+                 * Add Bootdown Attributes
+                 */
+                $bootdown_attributes = $this->bootdown()->doExtraAttributes( 'p', $value );
+                $value = $this->bootdown()->getText();
+
+
+
                 $value = "<p $bootdown_attributes>$value</p>";
                         }
             $grafs[ $key ] = $value;
@@ -3301,7 +3305,7 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
 
     function doFootnotes( $text ) {
 
-        
+
         #
         # Replace footnote references in $text [^id] with a special text-token 
         # which will be replaced by the actual footnote marker in appendFootnotes.
@@ -3445,7 +3449,7 @@ class Bootdown_MarkdownExtra_Parser extends Bootdown_Markdown_Parser {
 
     function doAbbreviations( $text ) {
 
-        
+
         #
         # Find defined abbreviations in text and wrap them in <abbr> elements.
         #
@@ -3809,7 +3813,7 @@ class Bootdown  {
      */
     public function doExtraAttributes( $tag_name, $text ) {
 
-        $this->debugLog( '<br>'.__LINE__ . $tag_name . ' doExtraAttributes called with <br>', $text, $tag_name );
+        $this->debugLog( '<br>' . __LINE__ . $tag_name . ' doExtraAttributes called with <br>', $text, $tag_name );
 
         $result[ 'text' ] = '';
         $result[ 'attributes' ] = '';
@@ -3823,17 +3827,16 @@ class Bootdown  {
             $this->debugLog( __LINE__ . '$text for ' . $tag_name . ' =', $text, $tag_name );
             if ( preg_match_all( '/^\s*{.*$/m', $text, $matches ) ){
                 $matches[ 0 ] = array_filter( $matches[ 0 ] ); //remove empty elements
-                $this->debugLog( __LINE__ . ' block $matches '.$tag_name.'  =', $matches, $tag_name );
+                $this->debugLog( __LINE__ . ' block $matches ' . $tag_name . '  =', $matches, $tag_name );
                 $maybe_line_with_attributes = array_pop( $matches[ 0 ] );
-                          }
-                          else {
-                              
-                              //if no match for attribute that apply to the block, then return $text unchanged.
-                              
-                              $result[ 'attributes' ] = '';
-            $result[ 'text' ] = $text;
-             $this->_cleaned_text = $result[ 'text' ];
-        return $result[ 'attributes' ];
+                          } else {
+
+                //if no match for attribute that apply to the block, then return $text unchanged.
+
+                $result[ 'attributes' ] = '';
+                $result[ 'text' ] = $text;
+                $this->_cleaned_text = $result[ 'text' ];
+                return $result[ 'attributes' ];
                           }
             $this->debugLog( __LINE__ . '$maybe_line_with_attributes =', $maybe_line_with_attributes, $tag_name );
                             }
@@ -3858,7 +3861,7 @@ class Bootdown  {
 
                  }
 
-        $this->debugLog( '<br>' .__LINE__ .  $tag_name . ' attribute parse <br>', $result, $tag_name );
+        $this->debugLog( '<br>' . __LINE__ . $tag_name . ' attribute parse <br>', $result, $tag_name );
 
 
 
@@ -3879,13 +3882,13 @@ class Bootdown  {
      * 
      * for a full backtrace, try this:
      * if (true){
-if (strstr($text,'label')!==false){
-    $this->bootdown()->debugLog('text for Italics',$text,'span');
-    echo '<pre>';
-    debug_print_backtrace();
-    echo '</pre>';
-}
-    }
+      if (strstr($text,'label')!==false){
+      $this->bootdown()->debugLog('text for Italics',$text,'span');
+      echo '<pre>';
+      debug_print_backtrace();
+      echo '</pre>';
+      }
+      }
      * 
      * 
      * 
@@ -3923,7 +3926,7 @@ if (strstr($text,'label')!==false){
     public function debugLog( $text, $var, $filter ) {
 
         $allowed_filters = array(
-            ''
+            'header'
         );
 
         if ( in_array( $filter, $allowed_filters ) ){
@@ -3936,6 +3939,20 @@ if (strstr($text,'label')!==false){
 
 
     }
+    }
+
+    /**
+     * Add Anchor Tag
+     *
+     * Just adds a named anchor text. Used to add anchor tags for headers
+     *
+     * @param string $anchor_name The name of the anchor tag
+     * @return void
+     */
+    public function addAnchorTag( $anchor_name ) {
+
+        return '<a name="' . $anchor_name . '"></a>';
+
     }
 }
 ?>

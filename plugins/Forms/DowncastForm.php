@@ -11,7 +11,153 @@
 class DowncastForm extends Form {
     /*  */
 
-    public function __construct( $id = "pfbc", $ajax = false ) {
+    public function __construct( $id = null, $ajax = null,$action=null ) {
+        {//Set id and ajax defaults based on whether it was called by ajax
+        
+            if ( $this->downcast()->isAjax() && is_null( $id ) ){//if ajax, set via post value and whether ajax call
+                /*
+                 * check if form was submitted and set id to $_POST[ 'form' ] value if available
+                 * this permits us to make a simple call within an ajax callback
+                 * e.g.: $form=new DowncastForm(); without having to reference  $_POST['form']
+                 */
+                $id = (isset( $_POST[ 'form' ] )) ? $_POST[ 'form' ] : "pfbc";
+
+                /* If $jax not explicitly set,
+                 * set it  based on whether it was called by ajax
+                 */
+                $ajax = (is_null( $ajax )) ? true : $ajax;
+
+
+
+
+} else {
+
+                /*
+                 * default $id to "pfbc" when not explicitly set 
+                 * and when created within a non-ajax request
+                 */
+                $id = (is_null( $id )) ? "pfbc" : $id;
+
+                /*
+                 * default $ajax to false when not explicitly set 
+                 * and when created within a non-ajax request
+                 */
+                $ajax = (is_null( $ajax )) ? false : $ajax;
+}
+        }
+
+        parent::__construct( $id );
+        $this->config();
+        
+        
+        /*
+         * Configure PHBC Form class
+         */
+        if ( $ajax ) {
+            /*
+             * Tell PHBC we want an ajax form
+             * It will then add the appropriate jscript to handle submit
+             */
+            $this->configure( array(
+                "ajax" => 1,
+                "ajaxCallback" => "DowncastPlugins.Forms.Forms.ajaxResponseHandler"
+            ) );
+
+            /*
+             * If an ajax form, set Ajax Options
+             * Calling it with an empty array causes it to use defaults
+             * If user calls it again, their new settings will overwrite the defaults
+             */
+    //        $this->setAjaxOptions( array() );
+            
+$this->setAjaxOptions( array('action'=>$action) );
+                /*
+         * sets the forms action attribute (form handler) to the ajax handler
+         */    
+            $this->setAttribute( 'action', '/ajax/handler/' );
+            
+
+
+
+
+            /*
+             * set form action
+             * if $action is not provided, set to 'action_warning' which will show an error message
+             * if $action is provided, then use it
+             */
+            
+            $action=(!is_null($action))?$action:'action_warning';
+            /*
+             * set a javascript variable for action so it can be added to the form
+             */
+
+
+
+
+
+
+}else {
+    
+       
+    
+        /*
+         * sets the default handler to the form's own page
+         */
+        $this->setAttribute( 'action', $_SERVER[ 'REQUEST_URI' ] );
+
+    
+}
+        /*
+         * Add form id
+         * (required)
+         * If missing, response won't process
+         */
+        $this->addElement( new Element_Hidden( "form", $this->id() ) );
+
+
+
+
+    }
+
+    /**
+     * Short Description
+     *
+     * Long Description
+     *
+     * @param none
+     * @return void
+     */
+        public function __construct_OLD( $id = null, $ajax = null ) {
+        {//set $id and $ajax arguments per defaults
+            if ( $this->downcast()->isAjax() && is_null( $id ) ){
+                /*
+                 * set id to post value if available
+                 * this permits us to make a simple call within an ajax callback
+                 * e.g.: $form=new DowncastForm(); without having to reference  $_POST['form']
+                 */
+                $id = (isset( $_POST[ 'form' ] )) ? $_POST[ 'form' ] : "pfbc";
+
+                $ajax = (is_null( $ajax )) ? true : $ajax;
+
+
+
+
+} else {
+
+                /*
+                 * default $id to "pfbc" when not explicitly set 
+                 * and when created within a non-ajax request
+                 */
+                $id = (is_null( $id )) ? "pfbc" : $id;
+
+                /*
+                 * default $ajax to false when not explicitly set 
+                 * and when created within a non-ajax request
+                 */
+                $ajax = (is_null( $ajax )) ? false : $ajax;
+}
+        }
+
         parent::__construct( $id );
         $this->config();
         if ( $ajax ) {
@@ -31,11 +177,23 @@ class DowncastForm extends Form {
              */
             $this->setAjaxOptions( array() );
 }
+        /*
+         * Add form id
+         * (required)
+         * If missing, response won't process
+         */
+        $this->addElement( new Element_Hidden( "form", $this->id() ) );
+
+
+        /*
+         * sets the default handler to the form's own page
+         */
+        $this->setAttribute( 'action', $_SERVER[ 'REQUEST_URI' ] );
+
 
 
     }
-
-    /*
+/*
      * Keeps a reference to the parent 
      * 
      * @type
@@ -156,6 +314,34 @@ class DowncastForm extends Form {
      }
 
     /**
+     * Validate Ajax Form
+     *
+     * Long Description
+     *
+     * @param none
+     * @return void
+     */
+    public function validateAjaxForm() {
+
+
+
+        $this->validateFormAfterSubmit();
+
+
+        if ( !$this->isValidAfterSubmit() ){
+
+
+
+            $this->renderAjaxErrorResponse( $this->id() );
+
+
+            exit();
+
+        }
+
+    }
+
+    /**
      * Validate Form
      *
      * Validates a Form. Calls Exit if validation fails and responds back with errors 
@@ -170,7 +356,7 @@ class DowncastForm extends Form {
          * Wait until Form is Validated Client Side
          * Client side validation is handled by 
          */
-  
+
         if ( !$this->isValid(
                         $this->id(), //form identifier
                         $clear //whether to clear values on submission (regardless if valid)
@@ -610,27 +796,45 @@ class DowncastForm extends Form {
      * @param none
      * @return void
      */
-    public function setAjaxOptions( $options ) {
+    public function setAjaxOptions( $_options ) {
 
+        $all_script_vars=$this->downcast()->getScriptVars();
+        $form_options=$all_script_vars['plugins']['Forms'][$this->id()];
+        $form_options=(!is_array($form_options))?array($form_options):$form_options;
+
+        /*
+         * merge existing with new 
+         */
+        $options=array_merge($form_options,$_options);
 
         $defaults = array(
-            'response_target' => 'downcast_form_response', //the id of the DOM element that should display any messages       
+         'action' => 'action_warning', 
+            'response_target' => 'downcast_response_target', //the id of the DOM element that should display any messages       
             'hide_on_success' => true, //hides the form on success
             'collapse_on_hide' => false, //completely removes all form html from page when form is hidden
-            'reset_on_success'=> true, //reset form after successful submission
+            'reset_on_success' => true, //reset form after successful submission
             'success_message' => '<div class="alert alert-success"><a class="close" href="#" data-dismiss="alert">×</a>Thank you for your submission!</div>', //default success message  //the default success message if the form handler does not supply one.
             'error_message' => '<div class="alert alert-danger"><a class="close" href="#" data-dismiss="alert">×</a>Your submission was unable to be processed. Please try again later.</div>' //the default error message if the form handler does not supply one.
         );
+      //  $this->downcast()->debugLog( '$defaults = ', $defaults, true, false );
+     //   $this->downcast()->debugLog( '$options = ', $options, true, false );
+
+      //  $this->downcast()->debugLog( '$options = ', array_filter($options,array($this,'isNotNull')), true, false );
 
         $options = $this->downcast()->screenDefaults(
                 $defaults, //only items in defaults will make it through
-                $options //options will overwrite defaults unless null, then defaults will be used
+                array_filter($options,array($this,'isNotNull')) //options will overwrite defaults unless null, then defaults will be used.array_filter unsets values that are null, allowing defaults to take their place
         );
+   //     $this->downcast()->debugLog( '$options = ', $options, true, false );
+
 
         /*
          * Downcast.Forms.MyFormId.options
          */
-        $this->downcast()->setPluginScriptVar( 'Forms', $this->id(), $options );
+       $this->downcast()->setPluginScriptVar( 'Forms', $this->id(), $options );
+
+     
+
 
     }
 
@@ -704,7 +908,8 @@ class DowncastForm extends Form {
     }
 
     }
-        /**
+
+    /**
      * Render
      *
      * Wrapper around Form::render so we can check if its ajax first
@@ -713,12 +918,25 @@ class DowncastForm extends Form {
      * @param none
      * @return void
      */
-    public function render( ) {
+    public function render() {
         if ( !$this->downcast()->isAjax() ) {
 
 
-            parent::render( $returnHTML=false );
+            parent::render( $returnHTML = false );
     }
+
+}
+
+    /**
+     * Is Not Null
+     *
+     * Used as Array Filtering Callback
+     *
+     * @param mixed $val
+     * @return bool True if not null, false otherwise
+     */
+    public function isNotNull( $val ) {
+       return !is_null($val);         
 
     }
 }

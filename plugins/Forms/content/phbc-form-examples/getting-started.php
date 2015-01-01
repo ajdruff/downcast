@@ -101,7 +101,7 @@ $form->addElement( new Element_Hidden( "form", $form_id ) );
  */
 
 $form->addElement( new Element_Email( "Email Address:", "Email", array( "required" => 1 ) ) );
-$form->addElement( new Element_Textbox( "Password:", "Password", array(
+$form->addElement( new Element_Password( "Password:", "Password", array(
     "required" => 1
 ) ) );
 $form->addElement( new Element_Checkbox( "", "Remember", array(

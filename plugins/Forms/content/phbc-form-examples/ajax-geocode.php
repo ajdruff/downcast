@@ -29,7 +29,7 @@ if ( !( $_POST[ "form" ] ) ) {
  */
 ?>
 {VIEW_SOURCE}
-###Demo Form - Ajax
+###Demo Form - Ajax Geocode
 
 
 
@@ -82,9 +82,11 @@ About this Demo
     ) ) );
 
     /*
-     * set action to this form
+     * set form handler (optional)
+     * if not set, it will default to the same url the form is on,e.g.: $form->setAttribute( 'action', $_POST['REQUEST_URI'] );
+     *   $form->setAttribute( 'action', '/url/to/form/handler' );
      */
-    $form->setAttribute( 'action', '/form/examples/ajax/' );
+  
 
     $form->addElement( new Element_HTML( '<div id="GoogleGeocodeAPIReaponse" style="display: none;">' ) );
     $form->addElement( new Element_Textbox( "Latitude/Longitude:", "LatitudeLongitude", array(

@@ -69,7 +69,7 @@ class DowncastPlugin   {
          */
  
         $this->downcast()->addContentTags( $this->downcast()->CONFIG[ 'PLUGIN' ][ $plugin_id ][ 'CONTENT_TAGS' ] );
-   
+
         /*
          * Add Embed Tags
          */
@@ -78,7 +78,9 @@ class DowncastPlugin   {
        
         
 
-       
+
+
+
 }
 
     /**
@@ -108,6 +110,12 @@ class DowncastPlugin   {
         /*
          * Add any configuration that should occur for all plugins here
          */
+
+/*
+ * add help page
+ */
+        $this->downcast()->addPage( '/plugins/'.get_class($this).'/help/', dirname(dirname(dirname( __FILE__ ))) . '/plugins/'.get_class($this).'/readme.md' );
+        
 
     }
 

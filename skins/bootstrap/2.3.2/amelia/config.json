@@ -3,7 +3,7 @@
                 "INFO":
                         {
                             "NAME": "Amelia",
-                            "DESCRIPTION": "Bootstrap Superhero swatch",
+                            "DESCRIPTION": "Bootstrap swatch",
                             "COMMENT": "http://bootswatch.com/",
                             "VERSION": "2.3.2"
 
@@ -12,25 +12,44 @@
                         {
                             "CSS":
                                     [
-                                        "http://fonts.googleapis.com/css?family=Oswald%7CNoticia+Text"
-                                    ]
-                            ,
-                            "CSS_INLINE":
-                                    [
-                                        "css/bootstrap.min.css",
-                                        "css/bootstrap-responsive.min.css"
-                                    ]
-                            ,
-                            "JS":
-                                    [
-                                        "https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"
+                                        {
+                                            "id": "bootstrap-fonts",
+                                            "active": true,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "http://fonts.googleapis.com/css?family=Oswald%7CNoticia+Text"
+                                        },
+                                        {
+                                            "id": "bootstrap",
+                                            "active": true,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "css/bootstrap.min.css"
+                                        },
+                                        {
+                                            "id": "bootstrap-responsive",
+                                            "active": true,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "css/bootstrap-responsive.min.css"
+                                        }
+
+
 
                                     ],
-                            "JS_INLINE":
+                            "JS":
                                     [
-                                        "js/bootstrap.min.js"
+                                        {
+                                            "id": "bootstrap",
+                                            "active": true,
+                                            "inline": false,
+                                            "footer": true,
+                                            "path": "js/bootstrap.min.js"
+                                        }
+
 
                                     ]
+
 
                         }
             }

@@ -12,29 +12,74 @@
                         {
                             "CSS":
                                     [
+                                        {
+                                            "id": "highlightjs",
+                                            "active": false,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "styles/github.css"
+                                        },
+                                        {
+                                            "id": "highlightjs",
+                                            "active": false,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "styles/ir_black.css"
+                                        },
+                                        {
+                                            "id": "highlightjs",
+                                            "active": false,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "styles/brown_paper.css"
+                                        },
+                                        {
+                                            "id": "highlightjs",
+                                            "active": false,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "styles/obsidian.css"
+                                        },                                            
+                                        {"id": "highlightjs",
+                                            "active": false,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "styles/mono-blue.css"
+                                        },
+                                                                                {
+                                            "id": "highlightjs",
+                                            "active": true,
+                                            "inline": false,
+                                            "footer": false,
+                                            "path": "styles/paraiso.light.css"
+                                        }
+                                        
+                                        
 
-                                    ]
-                            ,
-                            "CSS_INLINE":
-                                    [
-                                        "styles/github.css"
-                                    ]
-                            ,                            
-                            "CSS_INACTIVE":
-                                    [
-                                        "styles/ir_black.css",
-                                        "styles/brown_paper.css"
-                                    ]
-                            ,
+
+
+                                    ],
                             "JS":
                                     [
-                                        "highlight.pack.js"
-                                        
-                                    ],
-                            "JS_INLINE":
-                                    [
-                                        "highlight-activate.js"
-                                    ]                                    
+                                        {
+                                            "id": "highlight.pack.js",
+                                            "active": true,
+                                            "inline": false,
+                                            "footer": true,
+                                            "path": "highlight.pack.js"
+                                        },
+                                        {
+                                            "id": "highlight-activate.js",
+                                            "active": true,
+                                            "inline": true,
+                                            "footer": true,
+                                            "path": "highlight-activate.js"
+                                        }
+
+
+
+                                    ]
+
 
                         }
             }

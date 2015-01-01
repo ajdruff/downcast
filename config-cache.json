@@ -3,11 +3,17 @@
 
                 "CONFIG":
                         {
-                            "ENABLED": true,
+                            "ENABLED": false,
                             "TIMEOUT": 600,                    
                             "CLEANUP": true,
                             "PATH": null,
-                            "DEBUG":false
+                            "DEBUG":false,
+                            "EXCEPTION_REGEX_PATTERNS":
+                                [
+                            "form",
+                            "home"
+                                ]
+                            
                         },
                 "INFO":
                         {

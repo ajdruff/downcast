@@ -25,6 +25,41 @@
 //http://stackoverflow.com/a/4301154
 
 
+if ( !isset( $_POST[ "form" ] ) ) {
+
+    ?>
+{VIEW_SOURCE}
+###Demo Form - Ajax Form Using The Standard Downcast Javascript Response Handler(Preferred Method)
+
+
+
+
+<button type="button" class="btn btn-warning collapsed" data-toggle="collapse" data-target="#about">
+About this Demo
+</button>
+
+* **Ajax Form Using The Standard Downcast Javascript Response Handler**
+* This example demonstrates how to create an ajax form without having to write javascript. It uses the PHBC form library and Downcast's own javascript response handler to make it easier to create the form.
+ * Requires the DownCast Forms Plugin which uses the [PHP Form Builder Class](http://www.imavex.com/pfbc3.x-php5/index.php), a popular PHP forms framework
+ * Based on th [PHP Form Builder Class 'Ajax' Example](http://www.imavex.com/pfbc3.x-php5/examples/ajax.php) 
+
+ * To use:
+     1. Install the Forms Plugin
+     2.  place the following in the Forms plugin config() method : 
+     ```
+     $this->downcast()->addPage( '/form/examples/ajax/login/downcast/', dirname( __FILE__ ) . '/content/phbc-form-examples/ajax-login-downcast.php' );
+     ```
+ * Source located at `<?php echo $this->file_getRelativePath( __FILE__ ); ?>`
+{: id="about" class="collapse" }
+
+
+
+<?php 
+
+}
+
+
+
 /*
  * Declare the form object with our Form's ID
  */
@@ -53,6 +88,7 @@ $form = new DowncastForm(
  */
 
 $options = array(
+
     'hide_on_success' => true, //hides the form on success
     'collapse_on_hide' => false, //completely removes all form html from page when form is hidden);
     'reset_on_success' => false
@@ -79,7 +115,7 @@ $form->setValidationRule(
  * If missing, response won't be seen
  */
 
-$form->addElement( new Element_HTML( '<div id="downcast_form_response"><!--Successful Form Response Here--></div>' ) );
+//$form->addElement( new Element_HTML( '<div id="downcast_form_response"><!--Successful Form Response Here--></div>' ) );
 
 /*
  * Add form id
@@ -92,11 +128,12 @@ $form->addElement( new Element_Hidden( "form", $form->id() ) ); //required or wo
 /*
  * Form Handler
  * Optionally, provide a different form handler
- * Otherwise, it will use this same script when submitted
- * $form->setAttribute( 'action', '/form/examples/ajax/login-server-validation/' );
+ * Otherwise, it will use this same script when submitted,
+ * e.g.: $form->setAttribute( 'action', $_POST['REQUEST_URI'] ); //same url as this page
+ *  or  $form->setAttribute( 'action', '/url/to/form/handler' );
  */
 
-$form->setAttribute( 'action', '/form/examples/ajax/login-server-validation/' );
+
 
 
 /*
@@ -104,7 +141,7 @@ $form->setAttribute( 'action', '/form/examples/ajax/login-server-validation/' );
  */
 $form->addElement( new Element_HTML( '<legend>Login</legend>' ) );
 $form->addElement( new Element_Email( "Email Address:", "Email", array( "required" => 1 ) ) );
-$form->addElement( new Element_Textbox( "Password:", "Password", array( 
+$form->addElement( new Element_Textbox( "Password:", "Password", array(
     "required" => 1
 ) ) );
 $form->addElement( new Element_Checkbox( "", "Remember", array(
@@ -119,8 +156,8 @@ $form->render();
 
 
 
-        
-        
+
+
 if ( !class_exists( 'MyLoginForm' ) ) {
 
 
@@ -177,7 +214,7 @@ if ( !class_exists( 'MyLoginForm' ) ) {
 
             $response[ 'success' ] = $possible_results[ $key ];
 
-            //    $response[ 'success_message' ] = '<div class="alert alert-success"><a class="close" href="#" data-dismiss="alert">×</a>Login Successful!</div>';
+            $response[ 'success_message' ] = '<div class="alert alert-success"><a class="close" href="#" data-dismiss="alert">×</a>Login Successful!</div>';
             $response[ 'error_message' ] = '<div class="alert alert-danger"><a class="close" href="#" data-dismiss="alert">×</a>Sorry, wrong username or password, please try again</div>';         //this can also be handled using a custom validation message. see example.
             $response_json = json_encode( $response );
             echo $response_json;
@@ -188,15 +225,14 @@ if ( !class_exists( 'MyLoginForm' ) ) {
 
 
     }
-    
+
 /*
  * Add Form Handler
  * Must be called after class with method is defined
  */
 
-        $form->handleAjaxForm(
-            array( 'MyLoginForm', 'ajaxFormHandler' )//callback
-           );
-    
+$form->handleAjaxForm(
+        array( 'MyLoginForm', 'ajaxFormHandler' )//callback
+);
 ?>
 
