@@ -9,9 +9,21 @@ $form = new DowncastForm(
         "myform", // form id , arbitrary string that is unique for the form
         true, //$ajax whether we want the form to use ajax. 
         'MyAction'
+        
 );
 
-
+    /*
+    * Add Server Side Validation Rules
+    * 
+    */
+    $form->setValidationRule(
+           'Password', //field name to be validated
+           array( $form, 'validateMaxLength' ), //callback
+           5, //paramaters
+           'Too long! Password can\'t be more than 5 characters long' //error message
+    );
+    
+    
 if (true){
 $options = array(
 //'action'=>'MyAction',//this must be 

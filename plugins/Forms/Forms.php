@@ -51,7 +51,7 @@ class Forms extends DowncastPlugin {
      */
     public function config() {
     
-        if (true){
+        if (false){
         /*
          * Map Ajax Actions
          */
@@ -108,9 +108,8 @@ class Forms extends DowncastPlugin {
     }
 
     /**
-     * Short Description
+     * An Example Ajax Action
      *
-     * Long Description
      *
      * @param none
      * @return void
@@ -178,14 +177,14 @@ class Forms extends DowncastPlugin {
     }
 
 /**
- * Short Description
+ * Example Form Action Method
  *
- * Long Description
+ * Processes the form's input
  *
  * @param none
  * @return void
      */
-    public function MyOtherAction() {
+    public function MyAction() {
 
 $result['success']=true;
 $result['success_message']='you triggered '.__FUNCTION__;

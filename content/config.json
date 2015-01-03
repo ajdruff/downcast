@@ -15,9 +15,9 @@
                             "SKINS":
                                     {
                                         "superhero":
-                                                {"active": false, "path": "/bootstrap/2.3.2/superhero"},
+                                                {"active": true, "path": "/bootstrap/2.3.2/superhero"},
                                         "journal":
-                                                {"active": true, "path": "/bootstrap/2.3.2/journal"},
+                                                {"active": false, "path": "/bootstrap/2.3.2/journal"},
                                         "cyborg":
                                                 {"active": false, "path": "/bootstrap/2.3.2/cyborg"},
                                         "highlightjs":

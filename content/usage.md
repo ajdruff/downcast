@@ -154,6 +154,50 @@ All configuration data is stored in json.config either within the content direct
 
 ##How to 
 
+###How to Add Code Blocks
+
+Adding code blocks can be tricky - if you don't do it right, the code may not format correctly, showing the code as plain text or will arbitrarily render html while formatting other code correctly. Because of the way bootdown renders code blocks, you may not notice this behavior unless your code includes a mix of php, comments, and html.To avoid any problems, add blocks by taking the following steps:
+
+1. add triple back ticks ``` to start the code block
+2. Indent your code one tab (at least 4 spaces) from the left
+3. add triple back ticks ``` to end the code block
+
+   ````  
+   ```
+        <?php
+        /* 
+        * test code for code block 
+        */
+        ?>
+        <p>text surrounded by paragraph html tags</p> 
+   ```
+   ````  
+ 
+
+
+4. if you are adding your code within a list, indent the entire block (including starting and ending back ticks) one space to the right. This will allow any ordered lists to continue their numbering sequence.
+
+---
+
+>Test this by copying the code above and using it as a template. Note that if you violate any of the rules, the `text surrounded by paragraph html tags` will either not render as a code block or will render the html instead of displaying the `<p>` and `</p>` tags.
+
+---
+
+>**Nested Code Blocks**
+If for some reason you want to display a code block within a code block ( if you view the source of the usage.md file you'll see that it does), add additional backticks (beyond the minimum of 3) for each surrounding block. Example:
+
+`````
+````  
+```
+     <?php
+     /* 
+     * test code for code block 
+     */
+     ?>
+     <p>text surrounded by paragraph html tags</p> 
+```
+````
+`````
 
 
 ##Misc Notes
